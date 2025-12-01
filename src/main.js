@@ -14,16 +14,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const launch = async () => {
     if (hasStarted) return;
     hasStarted = true;
+    startButton.disabled = true;
+    startButton.textContent = 'Загрузка...';
+    startScreen.style.pointerEvents = 'none';
+    startButton.removeEventListener('click', launch);
+    startScreen.removeEventListener('click', launch);
+    window.removeEventListener('keydown', handleStartKey);
     startScreen.style.display = 'none';
     const game = new Game({ container, upgradePanel, statsEl, timerEl });
     await game.start();
   };
 
-  startButton.addEventListener('click', launch);
-  startScreen.addEventListener('click', launch);
-  window.addEventListener('keydown', (e) => {
+  const handleStartKey = (e) => {
     if (e.code === 'Enter' || e.code === 'Space') {
       launch();
     }
-  });
+  };
+
+  startButton.addEventListener('click', launch);
+  startScreen.addEventListener('click', launch);
+  window.addEventListener('keydown', handleStartKey);
 });

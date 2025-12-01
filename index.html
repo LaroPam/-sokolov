@@ -103,6 +103,12 @@
       transform: translateY(-2px);
       box-shadow: 0 0 18px rgba(255,0,255,0.4);
     }
+    #start-screen button:disabled {
+      opacity: 0.6;
+      cursor: progress;
+      transform: none;
+      box-shadow: none;
+    }
   </style>
 </head>
 <body>
@@ -110,6 +116,7 @@
     <div>Echoes of the Last Web</div>
     <div>WASD или стрелки — двигайся. Автоатака срабатывает сама.</div>
     <div>Нажми Enter, пробел или кликни, чтобы начать забег.</div>
+    <div style="font-size:12px;color:#8df;max-width:360px;line-height:1.4;">Если экран не реагирует, запусти страницу через локальный сервер (python -m http.server 8000) — так браузер не блокирует загрузку модулей.</div>
     <button id="start-button">Запуск в руины</button>
   </div>
   <div id="game-container"></div>
