@@ -70,55 +70,9 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
-    #start-screen {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(5,5,10,0.9);
-      color: #d5f6ff;
-      text-align: center;
-      padding: 20px;
-      letter-spacing: 1px;
-      text-shadow: 0 0 6px #0ff;
-      font-size: 18px;
-      flex-direction: column;
-      gap: 12px;
-    }
-    #start-screen button {
-      padding: 10px 18px;
-      border: 1px solid rgba(0,255,200,0.6);
-      background: linear-gradient(135deg, rgba(0,255,200,0.2), rgba(255,0,255,0.2));
-      color: #d5f6ff;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      box-shadow: 0 0 10px rgba(0,255,200,0.4);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    #start-screen button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 18px rgba(255,0,255,0.4);
-    }
-    #start-screen button:disabled {
-      opacity: 0.6;
-      cursor: progress;
-      transform: none;
-      box-shadow: none;
-    }
   </style>
 </head>
 <body>
-  <div id="start-screen">
-    <div>Echoes of the Last Web</div>
-    <div>WASD или стрелки — двигайся. Автоатака срабатывает сама.</div>
-    <div>Нажми Enter, пробел или кликни, чтобы начать забег.</div>
-    <div style="font-size:12px;color:#8df;max-width:360px;line-height:1.4;">Если экран не реагирует, запусти страницу через локальный сервер (python -m http.server 8000) — так браузер не блокирует загрузку модулей.</div>
-    <button id="start-button">Запуск в руины</button>
-  </div>
   <div id="game-container"></div>
   <div id="ui-layer">
     <div id="stats"></div>
