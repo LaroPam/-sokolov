@@ -17,54 +17,83 @@
       overflow: hidden;
     }
     #game-container {
+      position: relative;
       width: 100vw;
       height: 100vh;
-      position: relative;
     }
     #ui-layer {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+      inset: 0;
+      pointer-events: none;
       padding: 10px;
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
       font-size: 14px;
-      pointer-events: none;
       text-shadow: 0 0 4px #0ff;
     }
     #upgrade-panel {
       position: absolute;
       inset: 0;
       display: none;
+      background: rgba(5,5,12,0.9);
       align-items: center;
       justify-content: center;
-      background: rgba(5,5,10,0.85);
-      color: #d5f6ff;
-      font-size: 16px;
-      padding: 20px;
+      padding: 16px;
+      gap: 16px;
+      flex-wrap: wrap;
       text-align: center;
+      z-index: 3;
     }
     .upgrade-card {
-      background: linear-gradient(135deg, rgba(0,255,200,0.15), rgba(255,0,255,0.15));
-      border: 1px solid rgba(255,255,255,0.2);
+      width: 200px;
       padding: 12px;
-      margin: 10px;
-      width: 180px;
+      border: 1px solid rgba(0,255,200,0.35);
+      background: linear-gradient(135deg, rgba(0,255,200,0.15), rgba(255,0,255,0.15));
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
       pointer-events: auto;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      text-shadow: 0 0 6px #0ff;
     }
     .upgrade-card:hover {
       transform: translateY(-4px) scale(1.02);
       box-shadow: 0 0 12px rgba(0,255,200,0.4);
     }
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(5,5,12,0.92);
+      text-align: center;
+      letter-spacing: 1px;
+      text-shadow: 0 0 6px #0ff;
+      z-index: 4;
+    }
+    #start-screen button {
+      padding: 10px 18px;
+      border: 1px solid rgba(0,255,200,0.6);
+      background: linear-gradient(135deg, rgba(0,255,200,0.2), rgba(255,0,255,0.2));
+      color: #d5f6ff;
+      font-family: inherit;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0,255,200,0.4);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    #start-screen button:hover { transform: translateY(-2px); box-shadow: 0 0 18px rgba(255,0,255,0.4); }
+    #start-screen button:disabled { opacity: 0.6; cursor: progress; transform: none; box-shadow: none; }
     #overlay-message {
       position: absolute;
-      bottom: 12px;
-      left: 12px;
+      bottom: 10px;
+      left: 10px;
       padding: 6px 10px;
-      background: rgba(0,0,0,0.4);
+      background: rgba(0,0,0,0.35);
       color: #0ff;
       font-size: 12px;
       text-transform: uppercase;
@@ -73,13 +102,22 @@
   </style>
 </head>
 <body>
-  <div id="game-container"></div>
-  <div id="ui-layer">
-    <div id="stats"></div>
-    <div id="timer"></div>
+  <div id="game-container">
+    <div id="start-screen">
+      <div style="font-size:22px;">Echoes of the Last Web</div>
+      <div>WASD или стрелки — движение. Автоатака выбирает ближайшую цель.</div>
+      <div>Нажми Enter/Space или кликни, чтобы начать новый забег.</div>
+      <div style="font-size:12px;color:#8df;max-width:360px;line-height:1.4;">Если экран завис, открой через локальный сервер: <code>python -m http.server 8000</code>.</div>
+      <button id="start-button">Запуск</button>
+      <div id="run-summary" style="font-size:12px;color:#8df;max-width:360px;"></div>
+    </div>
+    <div id="upgrade-panel"></div>
+    <div id="ui-layer">
+      <div id="stats"></div>
+      <div id="timer"></div>
+    </div>
+    <div id="overlay-message">Echoes of the Last Web — выживай среди цифровых руин</div>
   </div>
-  <div id="upgrade-panel"></div>
-  <div id="overlay-message">Echoes of the Last Web — выживай среди цифровых руин</div>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

@@ -1,52 +1,79 @@
-import * as PIXI from 'https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.mjs';
+import Projectile from './projectile.js';
+import { clamp, normalize } from '../utils/math.js';
 
 class Player {
-  constructor(stage) {
-    this.position = { x: 0, y: 0 };
-    this.speed = 220;
-    this.health = 100;
-    this.maxHealth = 100;
-    this.damage = 10;
-    this.attackDelay = 600; // ms
-    this.attackCooldown = 0;
-    this.attackRadius = 340;
-    this.bulletSize = 10;
-
+  constructor(x, y) {
+    this.position = { x, y };
+    this.velocity = { x: 0, y: 0 };
+    this.health = 120;
+    this.maxHealth = 120;
     this.level = 1;
-    this.xp = 0;
-    this.nextLevelXp = 25;
-
-    this.sprite = this._createSprite(stage);
+    this.experience = 0;
+    this.experienceToLevel = 50;
+    this.attackTimer = 0;
+    this.stats = {
+      speed: 170,
+      damage: 14,
+      attackRadius: 260,
+      attackCooldown: 0.9,
+    };
+    this.isAlive = true;
   }
 
-  _createSprite(stage) {
-    const g = new PIXI.Graphics();
-    g.rect(-14, -14, 28, 28).fill({ color: 0x00ffff, alpha: 0.9 });
-    g.rect(-8, -8, 16, 16).fill({ color: 0xff00ff, alpha: 0.6 });
-    g.filters = [new PIXI.NoiseFilter(0.2)];
-    stage.addChild(g);
-    return g;
+  update(dt, input) {
+    if (!this.isAlive) return;
+    const dir = input.getDirection();
+    const axis = { x: 0, y: 0 };
+    if (dir.up) axis.y -= 1;
+    if (dir.down) axis.y += 1;
+    if (dir.left) axis.x -= 1;
+    if (dir.right) axis.x += 1;
+
+    const n = normalize(axis.x, axis.y);
+    this.velocity.x = n.x * this.stats.speed;
+    this.velocity.y = n.y * this.stats.speed;
+
+    this.position.x += this.velocity.x * dt;
+    this.position.y += this.velocity.y * dt;
+
+    this.attackTimer = Math.max(0, this.attackTimer - dt);
   }
 
-  update(deltaSeconds, movement) {
-    this.position.x += movement.x * this.speed * deltaSeconds;
-    this.position.y += movement.y * this.speed * deltaSeconds;
-    this.sprite.position.set(this.position.x, this.position.y);
+  tryAttack(target, dt) {
+    if (!target || this.attackTimer > 0 || !this.isAlive) return null;
+    this.attackTimer = this.stats.attackCooldown;
+
+    const dx = target.position.x - this.position.x;
+    const dy = target.position.y - this.position.y;
+    const dir = normalize(dx, dy);
+    const speed = 320;
+
+    return new Projectile({
+      x: this.position.x,
+      y: this.position.y,
+      vx: dir.x * speed,
+      vy: dir.y * speed,
+      damage: this.stats.damage,
+      lifespan: 1.6,
+    });
   }
 
-  gainXp(amount, onLevelUp) {
-    this.xp += amount;
-    while (this.xp >= this.nextLevelXp) {
-      this.xp -= this.nextLevelXp;
-      this.level += 1;
-      this.nextLevelXp = Math.floor(this.nextLevelXp * 1.35);
-      onLevelUp?.();
+  takeDamage(amount) {
+    this.health = clamp(this.health - amount, 0, this.maxHealth);
+    if (this.health <= 0) {
+      this.isAlive = false;
     }
   }
-}
 
-export function createPlayer(stage) {
-  return new Player(stage);
+  gainExperience(amount, onLevelUp) {
+    this.experience += amount;
+    while (this.experience >= this.experienceToLevel) {
+      this.experience -= this.experienceToLevel;
+      this.level += 1;
+      this.experienceToLevel = Math.round(this.experienceToLevel * 1.2 + 20);
+      if (onLevelUp) onLevelUp();
+    }
+  }
 }
 
 export default Player;

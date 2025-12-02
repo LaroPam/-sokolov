@@ -1,176 +1,185 @@
 import Renderer from './engine/renderer.js';
 import Input from './engine/input.js';
-import Loop from './engine/loop.js';
-import { createPlayer } from './entities/player.js';
-import { createProjectile } from './entities/projectile.js';
+import GameLoop from './engine/loop.js';
+import Player from './entities/player.js';
 import SpawnSystem from './systems/spawnSystem.js';
 import CollisionSystem from './systems/collisionSystem.js';
 import UpgradeSystem from './systems/upgradeSystem.js';
 import { distance } from './utils/math.js';
 
 class Game {
-  constructor({ container, upgradePanel, statsEl, timerEl }) {
+  constructor({ container, statsEl, timerEl, upgradePanel, onGameOver }) {
     this.container = container;
-    this.renderer = new Renderer(container);
-    this.input = new Input();
-    this.loop = new Loop(this.update.bind(this));
-    this.upgradeSystem = new UpgradeSystem(upgradePanel, (upgrade) => this.applyUpgrade(upgrade));
-
     this.statsEl = statsEl;
     this.timerEl = timerEl;
+    this.upgradePanel = upgradePanel;
+    this.onGameOver = onGameOver;
 
-    // Game state
+    this.renderer = new Renderer(container);
+    this.input = new Input();
+    this.loop = new GameLoop({
+      update: (dt) => this.update(dt),
+      render: () => this.draw(),
+    });
+
+    this.upgradeSystem = new UpgradeSystem();
+    this.spawnSystem = new SpawnSystem();
+
     this.entities = {
       player: null,
       enemies: [],
       projectiles: [],
     };
-    this.spawnSystem = new SpawnSystem();
-    this.collisionSystem = new CollisionSystem();
-    this.isGameOver = false;
+
     this.elapsed = 0;
+    this.kills = 0;
+    this.state = 'idle';
+    this.chainLightning = false;
+    this.orbitTimer = 0;
   }
 
-  async start() {
-    await this.renderer.init();
+  start() {
     this.reset();
     this.loop.start();
   }
 
   reset() {
-    this.isGameOver = false;
-    this.elapsed = 0;
-    this.renderer.reset();
-    this.entities = { player: null, enemies: [], projectiles: [] };
-
-    this.entities.player = createPlayer(this.renderer.stage);
+    this.entities.player = new Player(0, 0);
+    this.entities.enemies = [];
+    this.entities.projectiles = [];
     this.spawnSystem.reset();
     this.upgradeSystem.reset();
+    this.upgradePanel.style.display = 'none';
+    this.upgradePanel.innerHTML = '';
+    this.chainLightning = false;
+    this.orbitTimer = 0;
+    this.elapsed = 0;
+    this.kills = 0;
+    this.state = 'playing';
   }
 
-  update(delta) {
-    if (this.isGameOver) return;
+  destroy() {
+    this.loop.stop();
+    this.input.destroy();
+    this.renderer.destroy();
+  }
+
+  pause() {
+    this.state = 'paused';
+  }
+
+  resume() {
+    this.state = 'playing';
+  }
+
+  update(dt) {
+    if (this.state === 'paused') return;
     const { player, enemies, projectiles } = this.entities;
-    const deltaSeconds = delta / 1000;
-    this.elapsed += deltaSeconds;
+    this.elapsed += dt;
 
-    // Update UI
-    this.timerEl.textContent = `Время: ${this.elapsed.toFixed(1)}s`;
-    this.statsEl.textContent = `HP: ${Math.ceil(player.health)} | Урон: ${player.damage} | Скорость: ${player.speed} | Уровень: ${player.level} (${player.xp}/${player.nextLevelXp})`;
+    player.update(dt, this.input);
 
-    // Update player movement
-    player.update(deltaSeconds, this.input.movement);
-    this.renderer.centerCamera(player.position);
+    this.spawnSystem.update(dt, this.elapsed, (enemy) => enemies.push(enemy), player.position);
 
-    // Auto attack logic
-    player.attackCooldown -= delta;
-    if (player.attackCooldown <= 0 && enemies.length > 0) {
-      const target = this.findClosestEnemy(player.position, enemies);
-      if (target) {
-        const projectile = createProjectile(
-          player.position,
-          target,
-          player.damage,
-          player.bulletSize,
-          this.renderer.stage,
-        );
-        projectiles.push(projectile);
-        player.attackCooldown = player.attackDelay;
-      }
+    const target = this.findNearestEnemy(player, enemies);
+    const newProjectile = player.tryAttack(target, dt);
+    if (newProjectile) {
+      projectiles.push(newProjectile);
     }
 
-    // Update projectiles
-    for (const projectile of [...projectiles]) {
-      projectile.update(deltaSeconds);
-      if (projectile.life <= 0) {
-        projectile.destroy();
-        projectiles.splice(projectiles.indexOf(projectile), 1);
+    enemies.forEach((enemy) => enemy.update(dt, player.position));
+    projectiles.forEach((proj) => proj.update(dt));
+
+    CollisionSystem.handleProjectiles(projectiles, enemies, (enemy, damage) => {
+      enemy.takeDamage(damage);
+      if (this.chainLightning) {
+        const secondary = enemies.find((other) => other !== enemy && other.isAlive);
+        if (secondary) {
+          secondary.takeDamage(damage * 0.4);
+        }
       }
-    }
-
-    // Spawn enemies
-    const newEnemies = this.spawnSystem.update(deltaSeconds, this.elapsed, this.renderer.stage, player);
-    if (newEnemies.length) enemies.push(...newEnemies);
-
-    // Update enemies
-    for (const enemy of [...enemies]) {
-      enemy.update(deltaSeconds, player.position);
-      if (enemy.health <= 0) {
-        enemy.destroy();
-        enemies.splice(enemies.indexOf(enemy), 1);
-        player.gainXp(enemy.xpValue, () => this.upgradeSystem.offer(player));
+      if (!enemy.isAlive) {
+        this.kills += 1;
+        player.gainExperience(enemy.rewardXp, () => this.onLevelUp());
       }
-    }
+    });
 
-    // Passive skills from upgrades
-    this.applyPassiveSkills(deltaSeconds, player, enemies);
+    CollisionSystem.handlePlayer(enemies, player, (enemy) => player.takeDamage(enemy.damage * dt));
 
-    // Collisions
-    this.collisionSystem.handle(player, enemies, projectiles, () => this.onPlayerHit());
+    this.cleanup();
+    this.updateHud();
 
-    // Lose condition
-    if (player.health <= 0) {
+    if (!player.isAlive) {
       this.endRun();
     }
   }
 
-  applyPassiveSkills(deltaSeconds, player, enemies) {
-    // Orbital pulse
-    if (player.orbital) {
-      player.orbital.timer -= deltaSeconds;
-      if (player.orbital.timer <= 0) {
-        player.orbital.timer = 1.2;
-        enemies.forEach((enemy) => {
-          if (distance(player.position, enemy.position) <= player.orbital.radius) {
-            enemy.applyDamage(player.orbital.damage);
-          }
-        });
-      }
-    }
-
-    // Electric chain
-    if (player.chain) {
-      player.chain.timer -= deltaSeconds;
-      if (player.chain.timer <= 0 && enemies.length) {
-        const target = this.findClosestEnemy(player.position, enemies) || enemies[0];
-        if (target) {
-          target.applyDamage(player.chain.damage);
-        }
-        player.chain.timer = 2.4;
-      }
-    }
+  draw() {
+    const { player, enemies, projectiles } = this.entities;
+    this.renderer.clear(player.position, this.elapsed);
+    this.renderer.drawBackground(this.elapsed, player.position);
+    enemies.forEach((enemy) => this.renderer.drawEnemy(enemy));
+    projectiles.forEach((proj) => this.renderer.drawProjectile(proj));
+    this.renderer.drawPlayer(player);
   }
 
-  onPlayerHit() {
-    // brief glitch flash
-    this.renderer.flash();
+  cleanup() {
+    const { enemies, projectiles } = this.entities;
+    this.entities.enemies = enemies.filter((enemy) => enemy.isAlive);
+    this.entities.projectiles = projectiles.filter((proj) => proj.isAlive);
   }
 
-  endRun() {
-    this.isGameOver = true;
-    this.loop.stop();
-    this.upgradeSystem.showDeathScreen(() => {
-      this.reset();
-      this.loop.start();
+  findNearestEnemy(player, enemies) {
+    let nearest = null;
+    let nearestDist = Infinity;
+    for (const enemy of enemies) {
+      const d = distance(player.position, enemy.position);
+      if (d < nearestDist) {
+        nearestDist = d;
+        nearest = enemy;
+      }
+    }
+    if (nearest && nearestDist <= player.stats.attackRadius) {
+      return nearest;
+    }
+    return null;
+  }
+
+  onLevelUp() {
+    this.pause();
+    const options = this.upgradeSystem.getChoices();
+    this.showUpgradePanel(options);
+  }
+
+  showUpgradePanel(options) {
+    this.upgradePanel.innerHTML = '';
+    this.upgradePanel.style.display = 'flex';
+    options.forEach((opt) => {
+      const card = document.createElement('div');
+      card.className = 'upgrade-card';
+      card.innerHTML = `<strong>${opt.title}</strong><div style="margin-top:6px; font-size:13px;">${opt.description}</div>`;
+      card.addEventListener('click', () => {
+        opt.apply(this.entities.player, this);
+        this.upgradePanel.style.display = 'none';
+        this.resume();
+      });
+      this.upgradePanel.appendChild(card);
     });
   }
 
-  findClosestEnemy(position, enemies) {
-    let closest = null;
-    let closestDist = Infinity;
-    for (const enemy of enemies) {
-      const d = distance(position, enemy.position);
-      if (d < closestDist) {
-        closest = enemy;
-        closestDist = d;
-      }
+  endRun() {
+    this.state = 'ended';
+    this.loop.stop();
+    const timeSurvived = Math.round(this.elapsed);
+    if (this.onGameOver) {
+      this.onGameOver({ timeSurvived, kills: this.kills });
     }
-    return closest && closestDist <= this.entities.player.attackRadius ? closest : null;
   }
 
-  applyUpgrade(upgrade) {
-    const player = this.entities.player;
-    upgrade.apply(player);
+  updateHud() {
+    const { player } = this.entities;
+    this.statsEl.textContent = `HP: ${player.health.toFixed(0)} | Урон: ${player.stats.damage.toFixed(1)} | Скорость: ${player.stats.speed.toFixed(0)} | Уровень: ${player.level}`;
+    this.timerEl.textContent = `Время: ${Math.floor(this.elapsed)}с | EXP: ${player.experience.toFixed(0)}/${player.experienceToLevel}`;
   }
 }
 

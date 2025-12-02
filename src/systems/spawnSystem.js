@@ -1,45 +1,43 @@
-import { createEnemy } from '../entities/enemy.js';
+import Enemy from '../entities/enemy.js';
 
 class SpawnSystem {
   constructor() {
-    this.timer = 0;
-    this.interval = 2; // seconds
+    this.reset();
   }
 
   reset() {
     this.timer = 0;
-    this.interval = 2;
   }
 
-  update(deltaSeconds, elapsed, stage, player) {
-    this.timer -= deltaSeconds;
-    const spawned = [];
-    const difficulty = 1 + elapsed * 0.03;
-
+  update(dt, elapsed, spawnFn, playerPos) {
+    this.timer -= dt;
+    const difficulty = 1 + elapsed / 80;
+    const interval = Math.max(0.35, 1.4 - elapsed / 60);
     if (this.timer <= 0) {
-      const count = Math.min(1 + Math.floor(elapsed / 10), 6);
+      this.timer = interval;
+      const count = 1 + Math.floor(elapsed / 25);
       for (let i = 0; i < count; i++) {
-        const type = this._pickType(elapsed);
-        const enemy = createEnemy(stage, type, difficulty);
-        // push spawn slightly outside attack radius
-        const angle = Math.random() * Math.PI * 2;
-        const distance = player.attackRadius + 120 + Math.random() * 200;
-        enemy.position.x = player.position.x + Math.cos(angle) * distance;
-        enemy.position.y = player.position.y + Math.sin(angle) * distance;
-        enemy.sprite.position.set(enemy.position.x, enemy.position.y);
-        spawned.push(enemy);
+        const enemy = this.createEnemy(difficulty, playerPos);
+        spawnFn(enemy);
       }
-      this.interval = Math.max(0.6, 2 - elapsed * 0.01);
-      this.timer = this.interval;
     }
-
-    return spawned;
   }
 
-  _pickType(elapsed) {
-    if (elapsed > 90) return 'crawler';
-    if (elapsed > 45) return Math.random() > 0.4 ? 'leech' : 'crawler';
-    return Math.random() > 0.6 ? 'glitch' : 'leech';
+  createEnemy(difficulty, playerPos) {
+    const roll = Math.random();
+    let type = 'glitchBug';
+    if (roll > 0.8) type = 'corruptedCrawler';
+    else if (roll > 0.5) type = 'dataLeech';
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 420 + Math.random() * 140;
+    const position = {
+      x: playerPos.x + Math.cos(angle) * distance,
+      y: playerPos.y + Math.sin(angle) * distance,
+    };
+
+    const eliteBoost = Math.random() < 0.15 ? 1.6 : 1;
+    return new Enemy(type, position, difficulty * eliteBoost);
   }
 }
 

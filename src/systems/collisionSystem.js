@@ -1,24 +1,26 @@
 import { distance } from '../utils/math.js';
 
 class CollisionSystem {
-  handle(player, enemies, projectiles, onPlayerHit) {
-    // Player/enemy collisions
-    for (const enemy of enemies) {
-      const d = distance(player.position, enemy.position);
-      if (d < 26) {
-        player.health -= enemy.damage * 0.5; // contact damage mitigated by tick
-        onPlayerHit?.();
-      }
-    }
-
-    // Projectiles vs enemies
-    for (const projectile of [...projectiles]) {
-      for (const enemy of [...enemies]) {
-        const d = distance(projectile.position, enemy.position);
-        if (d < enemy.size / 2 + projectile.size / 2) {
-          enemy.applyDamage(projectile.damage);
-          projectile.life = 0;
+  static handleProjectiles(projectiles, enemies, onHit) {
+    projectiles.forEach((proj) => {
+      if (!proj.isAlive) return;
+      for (const enemy of enemies) {
+        if (!enemy.isAlive) continue;
+        if (distance(proj.position, enemy.position) < enemy.size) {
+          proj.isAlive = false;
+          if (onHit) onHit(enemy, proj.damage);
+          break;
         }
+      }
+    });
+  }
+
+  static handlePlayer(enemies, player, onTouch) {
+    for (const enemy of enemies) {
+      if (!enemy.isAlive) continue;
+      const hitRadius = enemy.size + 14;
+      if (distance(enemy.position, player.position) < hitRadius) {
+        if (onTouch) onTouch(enemy);
       }
     }
   }

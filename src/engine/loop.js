@@ -1,30 +1,31 @@
-// Basic game loop using requestAnimationFrame
-class Loop {
-  constructor(callback) {
-    this.callback = callback;
+class GameLoop {
+  constructor({ update, render }) {
+    this.update = update;
+    this.render = render;
     this.running = false;
     this.lastTime = 0;
-    this.frame = this.frame.bind(this);
+    this.rafId = null;
   }
 
   start() {
     if (this.running) return;
     this.running = true;
     this.lastTime = performance.now();
-    requestAnimationFrame(this.frame);
+    const step = (time) => {
+      if (!this.running) return;
+      const dt = Math.min((time - this.lastTime) / 1000, 0.05);
+      this.lastTime = time;
+      this.update(dt);
+      this.render();
+      this.rafId = requestAnimationFrame(step);
+    };
+    this.rafId = requestAnimationFrame(step);
   }
 
   stop() {
     this.running = false;
-  }
-
-  frame(timestamp) {
-    if (!this.running) return;
-    const delta = timestamp - this.lastTime;
-    this.lastTime = timestamp;
-    this.callback(delta);
-    requestAnimationFrame(this.frame);
+    if (this.rafId) cancelAnimationFrame(this.rafId);
   }
 }
 
-export default Loop;
+export default GameLoop;
