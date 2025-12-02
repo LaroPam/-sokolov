@@ -43,7 +43,7 @@ class Game {
     this.renderer.reset();
     this.entities = { player: null, enemies: [], projectiles: [] };
 
-    this.entities.player = createPlayer(this.renderer);
+    this.entities.player = createPlayer(this.renderer.stage);
     this.spawnSystem.reset();
     this.upgradeSystem.reset();
   }
@@ -72,7 +72,7 @@ class Game {
           target,
           player.damage,
           player.bulletSize,
-          this.renderer,
+          this.renderer.stage,
         );
         projectiles.push(projectile);
         player.attackCooldown = player.attackDelay;
@@ -89,7 +89,7 @@ class Game {
     }
 
     // Spawn enemies
-    const newEnemies = this.spawnSystem.update(deltaSeconds, this.elapsed, this.renderer, player);
+    const newEnemies = this.spawnSystem.update(deltaSeconds, this.elapsed, this.renderer.stage, player);
     if (newEnemies.length) enemies.push(...newEnemies);
 
     // Update enemies
@@ -107,9 +107,6 @@ class Game {
 
     // Collisions
     this.collisionSystem.handle(player, enemies, projectiles, () => this.onPlayerHit());
-
-    // Draw
-    this.renderer.render();
 
     // Lose condition
     if (player.health <= 0) {

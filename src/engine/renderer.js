@@ -1,107 +1,84 @@
-// Simple canvas-based renderer with a virtual camera and glitchy background
+import * as PIXI from 'https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.mjs';
+
+// Simple wrapper around PixiJS renderer and stage
 class Renderer {
   constructor(container) {
     this.container = container;
-    this.canvas = document.createElement('canvas');
-    this.ctx = this.canvas.getContext('2d');
-    this.sprites = [];
-    this.backgroundTiles = [];
-    this.flashAlpha = 0;
-    this.camera = { x: 0, y: 0 };
+    this.app = null;
+    this.stage = null;
+    this.flashOverlay = null;
   }
 
   async init() {
-    this._resize();
-    window.addEventListener('resize', () => this._resize());
+    this.app = new PIXI.Application({
+      resizeTo: this.container,
+      backgroundColor: 0x050510,
+      antialias: true,
+      powerPreference: 'high-performance',
+      autoDensity: true,
+    });
+    await this.app.init({ resizeTo: this.container });
+    this.stage = this.app.stage;
     this._buildBackground();
-    this.container.innerHTML = '';
-    this.container.appendChild(this.canvas);
-  }
-
-  _resize() {
-    this.canvas.width = this.container.clientWidth;
-    this.canvas.height = this.container.clientHeight;
+    this.container.appendChild(this.app.canvas);
   }
 
   _buildBackground() {
-    this.backgroundTiles = [];
-    const { width, height } = this.canvas;
+    this.stage.removeChildren();
+    // Create glitchy background tiles
+    const bg = new PIXI.Graphics();
     for (let i = 0; i < 80; i++) {
       const w = 60 + Math.random() * 80;
       const h = 40 + Math.random() * 60;
-      const x = Math.random() * width;
-      const y = Math.random() * height;
-      const hue = Math.floor(Math.random() * 360);
-      this.backgroundTiles.push({ x, y, w, h, hue, alpha: 0.05 });
+      const x = Math.random() * this.container.clientWidth;
+      const y = Math.random() * this.container.clientHeight;
+      const color = PIXI.Color.shared
+        .setValue(`hsl(${Math.random() * 360}, 90%, 50%)`)
+        .toNumber();
+      bg.rect(x, y, w, h).fill({ color, alpha: 0.05 });
     }
+    bg.filters = [new PIXI.NoiseFilter(0.25)];
+    this.stage.addChild(bg);
+
+    // Flash overlay
+    this.flashOverlay = new PIXI.Graphics();
+    this.flashOverlay
+      .rect(0, 0, this.container.clientWidth, this.container.clientHeight)
+      .fill({ color: 0xffffff, alpha: 0 });
+    this.flashOverlay.eventMode = 'none';
+    this.stage.addChild(this.flashOverlay);
   }
 
   reset() {
-    this.sprites = this.sprites.filter((s) => !s._destroyed);
     this._buildBackground();
   }
 
-  createSprite({ color = '#0ff', innerColor = null, size = 20 }) {
-    const sprite = {
-      x: 0,
-      y: 0,
-      size,
-      color,
-      innerColor,
-      alpha: 0.95,
-      _destroyed: false,
-    };
-    this.sprites.push(sprite);
-    return sprite;
-  }
-
-  removeSprite(sprite) {
-    sprite._destroyed = true;
-    this.sprites = this.sprites.filter((s) => s !== sprite);
-  }
-
   centerCamera(position) {
-    this.camera.x = position.x - this.canvas.width / 2;
-    this.camera.y = position.y - this.canvas.height / 2;
+    // Keep player centered via stage pivot
+    if (!this.stage) return;
+    this.stage.pivot.set(position.x, position.y);
+    this.stage.position.set(this.container.clientWidth / 2, this.container.clientHeight / 2);
+  }
+
+  createSprite(color = 0x00ffff, size = 20) {
+    const g = new PIXI.Graphics();
+    g.rect(-size / 2, -size / 2, size, size).fill({ color, alpha: 0.95 });
+    g.filters = [new PIXI.NoiseFilter(0.15)];
+    return g;
   }
 
   flash() {
-    this.flashAlpha = 0.4;
-  }
-
-  render() {
-    const { ctx, canvas } = this;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw background tiles (screen-space for a glitchy HUD vibe)
-    for (const tile of this.backgroundTiles) {
-      ctx.fillStyle = `hsla(${tile.hue}, 90%, 55%, ${tile.alpha})`;
-      ctx.fillRect(tile.x, tile.y, tile.w, tile.h);
-    }
-
-    // Draw sprites relative to camera
-    for (const sprite of this.sprites) {
-      if (sprite._destroyed) continue;
-      const screenX = sprite.x - this.camera.x;
-      const screenY = sprite.y - this.camera.y;
-      ctx.save();
-      ctx.globalAlpha = sprite.alpha;
-      ctx.fillStyle = sprite.color;
-      ctx.fillRect(screenX - sprite.size / 2, screenY - sprite.size / 2, sprite.size, sprite.size);
-      if (sprite.innerColor) {
-        ctx.fillStyle = sprite.innerColor;
-        const innerSize = sprite.size * 0.6;
-        ctx.fillRect(screenX - innerSize / 2, screenY - innerSize / 2, innerSize, innerSize);
+    if (!this.flashOverlay) return;
+    this.flashOverlay.alpha = 0.3;
+    const ticker = PIXI.Ticker.shared;
+    const fade = () => {
+      this.flashOverlay.alpha -= 0.02;
+      if (this.flashOverlay.alpha <= 0) {
+        this.flashOverlay.alpha = 0;
+        ticker.remove(fade);
       }
-      ctx.restore();
-    }
-
-    // Flash overlay
-    if (this.flashAlpha > 0) {
-      ctx.fillStyle = `rgba(255,255,255,${this.flashAlpha})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      this.flashAlpha = Math.max(0, this.flashAlpha - 0.02);
-    }
+    };
+    ticker.add(fade);
   }
 }
 
