@@ -82,20 +82,20 @@ class Game {
     this.spawnSystem.update(dt, this.elapsed, (enemy) => enemies.push(enemy), player.position);
 
     const target = this.findNearestEnemy(player, enemies);
-    const newProjectile = player.tryAttack(target, dt);
-    if (newProjectile) {
-      projectiles.push(newProjectile);
-    }
+    const newProjectiles = player.tryAttack(target, dt);
+    newProjectiles.forEach((p) => projectiles.push(p));
 
     enemies.forEach((enemy) => enemy.update(dt, player.position));
     projectiles.forEach((proj) => proj.update(dt));
 
+    this.applyOrbitals(player, enemies, dt);
+
     CollisionSystem.handleProjectiles(projectiles, enemies, (enemy, damage) => {
       enemy.takeDamage(damage);
       if (this.chainLightning) {
-        const secondary = enemies.find((other) => other !== enemy && other.isAlive);
+        const secondary = enemies.find((other) => other !== enemy && other.isAlive && distance(other.position, enemy.position) < 220);
         if (secondary) {
-          secondary.takeDamage(damage * 0.4);
+          secondary.takeDamage(damage * 0.45);
         }
       }
       if (!enemy.isAlive) {
@@ -145,6 +145,19 @@ class Game {
     return null;
   }
 
+  applyOrbitals(player, enemies, dt) {
+    player.orbitals.forEach((orb) => {
+      const ox = player.position.x + Math.cos(orb.angle) * orb.radius;
+      const oy = player.position.y + Math.sin(orb.angle) * orb.radius;
+      enemies.forEach((enemy) => {
+        if (!enemy.isAlive) return;
+        if (distance(enemy.position, { x: ox, y: oy }) < enemy.size + 8) {
+          enemy.takeDamage(orb.damage * dt * 6);
+        }
+      });
+    });
+  }
+
   onLevelUp() {
     this.pause();
     const options = this.upgradeSystem.getChoices();
@@ -178,7 +191,7 @@ class Game {
 
   updateHud() {
     const { player } = this.entities;
-    this.statsEl.textContent = `HP: ${player.health.toFixed(0)} | Урон: ${player.stats.damage.toFixed(1)} | Скорость: ${player.stats.speed.toFixed(0)} | Уровень: ${player.level}`;
+    this.statsEl.textContent = `HP: ${player.health.toFixed(0)}/${player.maxHealth} | Урон: ${player.stats.damage.toFixed(1)} | Скорость: ${player.stats.speed.toFixed(0)} | Орбиты: ${player.orbitals.length}`;
     this.timerEl.textContent = `Время: ${Math.floor(this.elapsed)}с | EXP: ${player.experience.toFixed(0)}/${player.experienceToLevel}`;
   }
 }

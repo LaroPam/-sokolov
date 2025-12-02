@@ -19,6 +19,9 @@ class Renderer {
   resize() {
     this.canvas.width = this.container.clientWidth;
     this.canvas.height = this.container.clientHeight;
+    this.ctx.font = '20px "Courier New", monospace';
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
   }
 
   createNoisePattern() {
@@ -44,14 +47,14 @@ class Renderer {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.globalAlpha = 1;
-    this.ctx.fillStyle = '#070914';
+    this.ctx.fillStyle = '#050510';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.globalAlpha = 0.5;
     this.ctx.fillStyle = this.bgNoise;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.globalAlpha = 1;
-    this.ctx.fillStyle = `rgba(0,255,200,0.1)`;
-    const pulse = 8 + Math.sin(time * 0.5) * 4;
+    this.ctx.fillStyle = `rgba(0,255,200,0.08)`;
+    const pulse = 10 + Math.sin(time * 0.5) * 5;
     for (let x = 0; x < this.canvas.width; x += 64) {
       for (let y = 0; y < this.canvas.height; y += 64) {
         this.ctx.fillRect(x, y, pulse, 1);
@@ -66,44 +69,58 @@ class Renderer {
     return { x, y };
   }
 
+  drawGlyph(glyph, x, y, color = '#0ff', size = 20, glow = '#0ff', jitter = 0) {
+    this.ctx.save();
+    this.ctx.translate(x + (Math.random() - 0.5) * jitter, y + (Math.random() - 0.5) * jitter);
+    this.ctx.font = `${size}px "Courier New", monospace`;
+    this.ctx.shadowColor = glow;
+    this.ctx.shadowBlur = 12;
+    this.ctx.fillStyle = color;
+    this.ctx.fillText(glyph, 0, 0);
+    this.ctx.restore();
+  }
+
   drawPlayer(player) {
     const { x, y } = this.worldToScreen(player.position);
-    const size = 24;
-    const jitter = Math.sin(performance.now() / 80) * 1.5;
-    this.ctx.fillStyle = '#0ff';
-    this.ctx.fillRect(x - size / 2, y - size / 2, size, size);
-    this.ctx.strokeStyle = '#f0f';
-    this.ctx.lineWidth = 2;
-    this.ctx.strokeRect(x - size / 2 - jitter, y - size / 2 + jitter, size, size);
+    const bob = Math.sin(player.walkCycle * 8) * 3;
+    const hurtGlow = player.hurtTimer > 0 ? '#ff4d7a' : '#0ff';
+    const hue = player.attackFlash > 0 ? '#aef' : '#d8fff7';
+    this.drawGlyph('@', x, y + bob, hue, 26, hurtGlow, 0.6);
+    this.drawGlyph('Δ', x, y - 18 + bob, '#8dff6c', 16, '#8dff6c', 0.4);
+    this.drawGlyph('◯', x, y + 18 + bob, '#0ff', 14, hurtGlow, 0);
+    player.orbitals.forEach((orb) => {
+      const ox = x + Math.cos(orb.angle) * orb.radius;
+      const oy = y + Math.sin(orb.angle) * orb.radius;
+      this.drawGlyph(orb.glyph, ox, oy, orb.color, 16, '#fff', 0.5);
+    });
   }
 
   drawEnemy(enemy) {
     const { x, y } = this.worldToScreen(enemy.position);
-    const size = enemy.size;
-    this.ctx.fillStyle = enemy.color;
-    this.ctx.fillRect(x - size / 2, y - size / 2, size, size);
-    this.ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    this.ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+    const bob = Math.sin(enemy.walkCycle * 8) * 2;
+    const hurt = enemy.hurtTimer > 0 ? '#fff5' : enemy.color;
+    this.drawGlyph(enemy.glyph, x, y + bob, hurt, 22, enemy.color, 0.3);
+    this.drawGlyph(':', x, y + bob - 16, enemy.color, 14, enemy.color, 0);
   }
 
   drawProjectile(projectile) {
     const { x, y } = this.worldToScreen(projectile.position);
-    const size = 8;
-    this.ctx.fillStyle = '#8df';
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, size / 2, 0, Math.PI * 2);
-    this.ctx.fill();
+    this.drawGlyph(projectile.glyph, x, y, projectile.color, 18, '#8df', 0.2);
   }
 
   drawBackground(time, center) {
-    // Already cleared with glitch noise; draw parallax fragments
     this.ctx.save();
-    this.ctx.translate(this.canvas.width / 2 - (center.x % 200), this.canvas.height / 2 - (center.y % 200));
-    const colors = ['#0c1824', '#0f1f30', '#0a1420'];
+    this.ctx.translate(this.canvas.width / 2 - (center.x % 160), this.canvas.height / 2 - (center.y % 160));
+    const chars = ['░', '▒', '▓', '≋'];
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
-        this.ctx.fillStyle = colors[(i + j + Math.round(time)) % colors.length];
-        this.ctx.fillRect(i * 200, j * 200, 200, 200);
+        const idx = Math.abs(Math.floor((i + j + Math.round(time)) % chars.length));
+        const glyph = chars[idx];
+        const cx = i * 160;
+        const cy = j * 160;
+        this.ctx.fillStyle = 'rgba(0,255,200,0.04)';
+        this.ctx.fillRect(cx, cy, 160, 160);
+        this.drawGlyph(glyph.repeat(2), cx + 80, cy + 80, '#144', 32, '#0ff', 0);
       }
     }
     this.ctx.restore();

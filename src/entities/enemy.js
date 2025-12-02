@@ -2,28 +2,40 @@ import { normalize } from '../utils/math.js';
 
 const ENEMY_TYPES = {
   glitchBug: {
-    speed: 110,
-    health: 24,
-    damage: 8,
-    color: '#ff5cf4',
+    speed: 100,
+    health: 22,
+    damage: 7,
+    color: '#ff6cf4',
+    glyph: 'x',
     size: 18,
     rewardXp: 10,
   },
   dataLeech: {
-    speed: 70,
-    health: 42,
-    damage: 14,
+    speed: 65,
+    health: 36,
+    damage: 12,
     color: '#7cff5c',
-    size: 22,
-    rewardXp: 16,
+    glyph: 's',
+    size: 20,
+    rewardXp: 14,
   },
   corruptedCrawler: {
-    speed: 45,
-    health: 90,
-    damage: 20,
+    speed: 42,
+    health: 70,
+    damage: 18,
     color: '#ffb23f',
+    glyph: '#',
     size: 26,
-    rewardXp: 22,
+    rewardXp: 20,
+  },
+  nullWraith: {
+    speed: 85,
+    health: 40,
+    damage: 15,
+    color: '#82d8ff',
+    glyph: '?',
+    size: 22,
+    rewardXp: 18,
   },
 };
 
@@ -32,13 +44,16 @@ class Enemy {
     const stats = ENEMY_TYPES[type] || ENEMY_TYPES.glitchBug;
     this.type = type;
     this.position = { ...position };
-    this.speed = stats.speed * difficulty;
+    this.speed = stats.speed * Math.max(0.9, difficulty * 0.95);
     this.maxHealth = stats.health * difficulty;
     this.health = this.maxHealth;
-    this.damage = stats.damage * (0.8 + difficulty * 0.2);
+    this.damage = stats.damage * (0.7 + difficulty * 0.18);
     this.color = stats.color;
     this.size = stats.size;
-    this.rewardXp = Math.round(stats.rewardXp * difficulty);
+    this.rewardXp = Math.round(stats.rewardXp * (0.9 + difficulty * 0.12));
+    this.glyph = stats.glyph;
+    this.hurtTimer = 0;
+    this.walkCycle = 0;
     this.isAlive = true;
   }
 
@@ -49,10 +64,13 @@ class Enemy {
     const dir = normalize(dx, dy);
     this.position.x += dir.x * this.speed * dt;
     this.position.y += dir.y * this.speed * dt;
+    this.walkCycle += dt * (this.speed / 80);
+    this.hurtTimer = Math.max(0, this.hurtTimer - dt);
   }
 
   takeDamage(amount) {
     this.health -= amount;
+    this.hurtTimer = 0.25;
     if (this.health <= 0) {
       this.isAlive = false;
     }
