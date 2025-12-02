@@ -118,6 +118,33 @@
     </div>
     <div id="overlay-message">Echoes of the Last Web — выживай среди цифровых руин</div>
   </div>
-  <script type="module" src="./src/main.js"></script>
+  <script>
+    (function loadGame() {
+      const loadOffline = () => {
+        const script = document.createElement('script');
+        script.src = './offline.js';
+        script.defer = true;
+        document.body.appendChild(script);
+      };
+
+      const loadModules = () => {
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = './src/main.js';
+        script.onerror = () => {
+          console.warn('ES-модули не загрузились, включаю офлайн-бандл');
+          loadOffline();
+        };
+        document.body.appendChild(script);
+      };
+
+      if (window.location.protocol === 'file:') {
+        // file:// чаще всего блокирует ES-модули в Chrome/Edge — сразу грузим офлайн-бандл
+        loadOffline();
+      } else {
+        loadModules();
+      }
+    })();
+  </script>
 </body>
 </html>
