@@ -1,11 +1,13 @@
 class Renderer {
-  constructor(container) {
+  constructor(container, assets) {
     this.container = container;
+    this.assets = assets;
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d');
     this.container.appendChild(this.canvas);
     this.camera = { x: 0, y: 0 };
     this.bgNoise = this.createNoisePattern();
+    this.tilePattern = null;
     this.resize();
     this.handleResize = () => this.resize();
     window.addEventListener('resize', this.handleResize);
@@ -69,60 +71,74 @@ class Renderer {
     return { x, y };
   }
 
-  drawGlyph(glyph, x, y, color = '#0ff', size = 20, glow = '#0ff', jitter = 0) {
+  drawSprite(image, x, y, { scale = 1, alpha = 1, rotation = 0 } = {}) {
+    if (!image) return;
     this.ctx.save();
-    this.ctx.translate(x + (Math.random() - 0.5) * jitter, y + (Math.random() - 0.5) * jitter);
-    this.ctx.font = `${size}px "Courier New", monospace`;
-    this.ctx.shadowColor = glow;
-    this.ctx.shadowBlur = 12;
-    this.ctx.fillStyle = color;
-    this.ctx.fillText(glyph, 0, 0);
+    this.ctx.translate(x, y);
+    this.ctx.rotate(rotation);
+    this.ctx.globalAlpha = alpha;
+    const w = image.width * scale;
+    const h = image.height * scale;
+    this.ctx.drawImage(image, -w / 2, -h / 2, w, h);
     this.ctx.restore();
   }
 
-  drawPlayer(player) {
+  drawPlayer(player, spriteSets) {
     const { x, y } = this.worldToScreen(player.position);
     const bob = Math.sin(player.walkCycle * 8) * 3;
-    const hurtGlow = player.hurtTimer > 0 ? '#ff4d7a' : '#0ff';
-    const hue = player.attackFlash > 0 ? '#aef' : '#d8fff7';
-    this.drawGlyph('@', x, y + bob, hue, 26, hurtGlow, 0.6);
-    this.drawGlyph('Δ', x, y - 18 + bob, '#8dff6c', 16, '#8dff6c', 0.4);
-    this.drawGlyph('◯', x, y + 18 + bob, '#0ff', 14, hurtGlow, 0);
+    const set = spriteSets.player;
+    let frame = this.assets.images[set.walk[Math.floor(player.walkCycle * 6) % set.walk.length]];
+    if (player.hurtTimer > 0) {
+      frame = this.assets.images[set.hurt[0]];
+    } else if (player.attackFlash > 0) {
+      frame = this.assets.images[set.attack[0]];
+    } else if (Math.abs(player.velocity.x) < 2 && Math.abs(player.velocity.y) < 2) {
+      frame = this.assets.images[set.idle[0]];
+    }
+    this.drawSprite(frame, x, y + bob, { scale: 1.5 });
     player.orbitals.forEach((orb) => {
       const ox = x + Math.cos(orb.angle) * orb.radius;
       const oy = y + Math.sin(orb.angle) * orb.radius;
-      this.drawGlyph(orb.glyph, ox, oy, orb.color, 16, '#fff', 0.5);
+      const orbKey = spriteSets.orbitals[orb.sprite] || spriteSets.orbitals.default;
+      const orbImg = this.assets.images[orbKey];
+      this.drawSprite(orbImg, ox, oy, { scale: 1, alpha: 0.95 });
     });
   }
 
-  drawEnemy(enemy) {
+  drawEnemy(enemy, spriteSets) {
     const { x, y } = this.worldToScreen(enemy.position);
     const bob = Math.sin(enemy.walkCycle * 8) * 2;
-    const hurt = enemy.hurtTimer > 0 ? '#fff5' : enemy.color;
-    this.drawGlyph(enemy.glyph, x, y + bob, hurt, 22, enemy.color, 0.3);
-    this.drawGlyph(':', x, y + bob - 16, enemy.color, 14, enemy.color, 0);
+    const frames = spriteSets.enemies[enemy.type] || spriteSets.enemies.glitchBug;
+    const frame = this.assets.images[frames[Math.floor(enemy.walkCycle * 4) % frames.length]];
+    const alpha = enemy.hurtTimer > 0 ? 0.7 : 1;
+    this.drawSprite(frame, x, y + bob, { scale: 1.5, alpha });
   }
 
-  drawProjectile(projectile) {
+  drawProjectile(projectile, spriteSets) {
     const { x, y } = this.worldToScreen(projectile.position);
-    this.drawGlyph(projectile.glyph, x, y, projectile.color, 18, '#8df', 0.2);
+    const spriteKey = spriteSets.projectiles[projectile.sprite] || spriteSets.projectiles.shard;
+    const img = this.assets.images[spriteKey];
+    this.drawSprite(img, x, y, { scale: 1.2, rotation: projectile.rotation || 0 });
   }
 
-  drawBackground(time, center) {
-    this.ctx.save();
-    this.ctx.translate(this.canvas.width / 2 - (center.x % 160), this.canvas.height / 2 - (center.y % 160));
-    const chars = ['░', '▒', '▓', '≋'];
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
-        const idx = Math.abs(Math.floor((i + j + Math.round(time)) % chars.length));
-        const glyph = chars[idx];
-        const cx = i * 160;
-        const cy = j * 160;
-        this.ctx.fillStyle = 'rgba(0,255,200,0.04)';
-        this.ctx.fillRect(cx, cy, 160, 160);
-        this.drawGlyph(glyph.repeat(2), cx + 80, cy + 80, '#144', 32, '#0ff', 0);
+  drawBackground(center) {
+    if (!this.tilePattern) {
+      const tileImg = this.assets.images[this.assets.sets.background];
+      if (tileImg) {
+        const off = document.createElement('canvas');
+        off.width = tileImg.width;
+        off.height = tileImg.height;
+        const ctx = off.getContext('2d');
+        ctx.drawImage(tileImg, 0, 0);
+        this.tilePattern = this.ctx.createPattern(off, 'repeat');
       }
     }
+    if (!this.tilePattern) return;
+    this.ctx.save();
+    this.ctx.translate(this.canvas.width / 2 - (center.x % 128), this.canvas.height / 2 - (center.y % 128));
+    this.ctx.fillStyle = this.tilePattern;
+    this.ctx.globalAlpha = 0.75;
+    this.ctx.fillRect(-128, -128, this.canvas.width + 256, this.canvas.height + 256);
     this.ctx.restore();
   }
 }

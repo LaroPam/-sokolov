@@ -25,6 +25,7 @@ class Player {
     this.weapon = {
       count: 1,
       spread: 0.12,
+      projectile: 'shard',
     };
     this.orbitals = [];
     this.isAlive = true;
@@ -82,14 +83,16 @@ class Player {
           vy: dir.y * this.stats.projectileSpeed,
           damage: this.stats.damage,
           lifespan: 1.7,
+          sprite: this.weapon.projectile || 'shard',
+          rotation: angle,
         }),
       );
     }
     return shots;
   }
 
-  addOrbital({ radius = 70, speed = 2, damage = 8, glyph = '*', color = '#8df' }) {
-    this.orbitals.push({ angle: Math.random() * Math.PI * 2, radius, speed, damage, glyph, color });
+  addOrbital({ radius = 70, speed = 2, damage = 8, sprite = 'default' }) {
+    this.orbitals.push({ angle: Math.random() * Math.PI * 2, radius, speed, damage, sprite });
   }
 
   takeDamage(amount) {

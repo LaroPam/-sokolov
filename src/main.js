@@ -1,4 +1,5 @@
 import Game from './game.js';
+import { loadAssets } from './assets.js';
 
 const startScreen = document.getElementById('start-screen');
 const startButton = document.getElementById('start-button');
@@ -10,10 +11,12 @@ const upgradePanel = document.getElementById('upgrade-panel');
 
 let game = null;
 let isBooting = false;
+let assetsPromise = null;
 
 function showStart(message = '') {
   isBooting = false;
   startButton.disabled = false;
+  startButton.textContent = 'Запуск';
   startScreen.style.display = 'flex';
   runSummary.textContent = message;
 }
@@ -33,23 +36,35 @@ function attachStartListeners() {
     if (isBooting || startScreen.style.display === 'none') return;
     isBooting = true;
     startButton.disabled = true;
+    if (!assetsPromise) {
+      assetsPromise = loadAssets();
+    }
+    startButton.textContent = 'Загрузка ассетов...';
     hideStart();
 
-    if (game) {
-      game.destroy();
-    }
+    assetsPromise
+      .then((assets) => {
+        startButton.textContent = 'Запуск';
+        if (game) {
+          game.destroy();
+        }
 
-    game = new Game({
-      container,
-      statsEl,
-      timerEl,
-      upgradePanel,
-      onGameOver: ({ timeSurvived, kills }) => {
-        showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`);
-      },
-    });
+        game = new Game({
+          container,
+          statsEl,
+          timerEl,
+          upgradePanel,
+          assets,
+          onGameOver: ({ timeSurvived, kills }) => {
+            showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`);
+          },
+        });
 
-    game.start();
+        game.start();
+      })
+      .catch(() => {
+        showStart('Не удалось загрузить ассеты');
+      });
   };
 
   startButton.addEventListener('click', handler);

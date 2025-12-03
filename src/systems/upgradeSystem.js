@@ -95,7 +95,7 @@ class UpgradeSystem {
         title: 'Орбитальный дрон',
         description: 'Добавляет дрон-* вокруг героя, наносящий урон в ближнем бою',
         apply: (player) => {
-          player.addOrbital({ radius: 78, speed: 2.4, damage: player.stats.damage * 0.5, glyph: '*', color: '#aef' });
+          player.addOrbital({ radius: 78, speed: 2.4, damage: player.stats.damage * 0.5, sprite: 'default' });
         },
       },
       {
@@ -104,7 +104,7 @@ class UpgradeSystem {
         apply: (player) => {
           player.stats.projectileSpeed *= 1.2;
           player.weapon.count = Math.min(player.weapon.count + 1, 4);
-          player.addOrbital({ radius: 48, speed: 3.6, damage: player.stats.damage * 0.35, glyph: '◉', color: '#ff5cf4' });
+          player.addOrbital({ radius: 48, speed: 3.6, damage: player.stats.damage * 0.35, sprite: 'default' });
         },
       },
       {

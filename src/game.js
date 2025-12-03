@@ -8,14 +8,15 @@ import UpgradeSystem from './systems/upgradeSystem.js';
 import { distance } from './utils/math.js';
 
 class Game {
-  constructor({ container, statsEl, timerEl, upgradePanel, onGameOver }) {
+  constructor({ container, statsEl, timerEl, upgradePanel, onGameOver, assets }) {
     this.container = container;
     this.statsEl = statsEl;
     this.timerEl = timerEl;
     this.upgradePanel = upgradePanel;
     this.onGameOver = onGameOver;
+    this.assets = assets;
 
-    this.renderer = new Renderer(container);
+    this.renderer = new Renderer(container, assets);
     this.input = new Input();
     this.loop = new GameLoop({
       update: (dt) => this.update(dt),
@@ -117,10 +118,10 @@ class Game {
   draw() {
     const { player, enemies, projectiles } = this.entities;
     this.renderer.clear(player.position, this.elapsed);
-    this.renderer.drawBackground(this.elapsed, player.position);
-    enemies.forEach((enemy) => this.renderer.drawEnemy(enemy));
-    projectiles.forEach((proj) => this.renderer.drawProjectile(proj));
-    this.renderer.drawPlayer(player);
+    this.renderer.drawBackground(player.position);
+    enemies.forEach((enemy) => this.renderer.drawEnemy(enemy, this.assets.sets));
+    projectiles.forEach((proj) => this.renderer.drawProjectile(proj, this.assets.sets));
+    this.renderer.drawPlayer(player, this.assets.sets);
   }
 
   cleanup() {

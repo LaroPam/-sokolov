@@ -1,11 +1,11 @@
 class Projectile {
-  constructor({ x, y, vx, vy, damage, lifespan = 1.5, glyph = '•', color = '#8df' }) {
+  constructor({ x, y, vx, vy, damage, lifespan = 1.5, sprite = 'shard', rotation = 0 }) {
     this.position = { x, y };
     this.velocity = { x: vx, y: vy };
     this.damage = damage;
     this.lifespan = lifespan;
-    this.glyph = glyph;
-    this.color = color;
+    this.sprite = sprite;
+    this.rotation = rotation;
     this.isAlive = true;
   }
 
@@ -13,6 +13,7 @@ class Projectile {
     if (!this.isAlive) return;
     this.position.x += this.velocity.x * dt;
     this.position.y += this.velocity.y * dt;
+    this.rotation += dt * 8;
     this.lifespan -= dt;
     if (this.lifespan <= 0) {
       this.isAlive = false;
