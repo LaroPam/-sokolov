@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Echoes of the Last Web</title>
+  <title>Graves of the Last Light</title>
   <style>
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(0,255,200,0.1), transparent 40%),
-                  radial-gradient(circle at 80% 10%, rgba(255,0,255,0.1), transparent 35%),
-                  #050510;
-      color: #d5f6ff;
+      background: radial-gradient(circle at 20% 20%, rgba(120,180,140,0.12), transparent 40%),
+                  radial-gradient(circle at 80% 10%, rgba(90,120,150,0.1), transparent 35%),
+                  #0b0f12;
+      color: #d9ecde;
       font-family: 'Courier New', monospace;
       height: 100vh;
       overflow: hidden;
@@ -32,13 +32,13 @@
       gap: 8px;
       flex-wrap: wrap;
       font-size: 14px;
-      text-shadow: 0 0 4px #0ff;
+      text-shadow: 0 0 4px #3cd0a3;
     }
     #upgrade-panel {
       position: absolute;
       inset: 0;
       display: none;
-      background: rgba(5,5,12,0.9);
+      background: rgba(5,8,10,0.9);
       align-items: center;
       justify-content: center;
       padding: 16px;
@@ -50,16 +50,17 @@
     .upgrade-card {
       width: 200px;
       padding: 12px;
-      border: 1px solid rgba(0,255,200,0.35);
-      background: linear-gradient(135deg, rgba(0,255,200,0.15), rgba(255,0,255,0.15));
+      border: 1px solid rgba(90,220,180,0.45);
+      background: linear-gradient(135deg, rgba(90,140,100,0.18), rgba(130,180,210,0.18));
       cursor: pointer;
       pointer-events: auto;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
-      text-shadow: 0 0 6px #0ff;
+      text-shadow: 0 0 6px #3cd0a3;
+      color: #d9ecde;
     }
     .upgrade-card:hover {
       transform: translateY(-4px) scale(1.02);
-      box-shadow: 0 0 12px rgba(0,255,200,0.4);
+      box-shadow: 0 0 12px rgba(90,220,180,0.45);
     }
     #start-screen {
       position: absolute;
@@ -69,11 +70,12 @@
       align-items: center;
       justify-content: center;
       gap: 12px;
-      background: rgba(5,5,12,0.92);
+      background: rgba(8,12,10,0.94);
       text-align: center;
       letter-spacing: 1px;
-      text-shadow: 0 0 6px #0ff;
+      text-shadow: 0 0 6px #3cd0a3;
       z-index: 4;
+      color: #d9ecde;
     }
     #weapon-choices {
       display: grid;
@@ -88,36 +90,36 @@
       align-items: center;
       gap: 6px;
       padding: 10px;
-      border: 1px solid rgba(0,255,200,0.35);
-      background: linear-gradient(135deg, rgba(0,255,200,0.12), rgba(255,0,255,0.08));
+      border: 1px solid rgba(90,220,180,0.35);
+      background: linear-gradient(135deg, rgba(90,140,100,0.12), rgba(130,180,210,0.12));
       cursor: pointer;
       pointer-events: auto;
-      color: #d5f6ff;
+      color: #d9ecde;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
     .weapon-card img {
       width: 64px;
       height: 64px;
-      filter: drop-shadow(0 0 6px rgba(0,255,200,0.35));
+      filter: drop-shadow(0 0 6px rgba(90,220,180,0.35));
     }
     .weapon-card .weapon-title { font-weight: bold; text-transform: uppercase; font-size: 14px; }
-    .weapon-card .weapon-desc { font-size: 12px; line-height: 1.3; color: #b8e5ff; }
-    .weapon-card:hover { transform: translateY(-3px); box-shadow: 0 0 12px rgba(0,255,200,0.4); }
-    .weapon-card.selected { outline: 2px solid #0ff; box-shadow: 0 0 14px rgba(0,255,200,0.5); }
+    .weapon-card .weapon-desc { font-size: 12px; line-height: 1.3; color: #cde8d4; }
+    .weapon-card:hover { transform: translateY(-3px); box-shadow: 0 0 12px rgba(90,220,180,0.4); }
+    .weapon-card.selected { outline: 2px solid #53f6c4; box-shadow: 0 0 14px rgba(90,220,180,0.5); }
     #start-screen button {
       padding: 10px 18px;
-      border: 1px solid rgba(0,255,200,0.6);
-      background: linear-gradient(135deg, rgba(0,255,200,0.2), rgba(255,0,255,0.2));
-      color: #d5f6ff;
+      border: 1px solid rgba(90,220,180,0.6);
+      background: linear-gradient(135deg, rgba(90,140,100,0.2), rgba(130,180,210,0.2));
+      color: #d9ecde;
       font-family: inherit;
       font-size: 16px;
       text-transform: uppercase;
       letter-spacing: 2px;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(0,255,200,0.4);
+      box-shadow: 0 0 10px rgba(90,220,180,0.4);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    #start-screen button:hover { transform: translateY(-2px); box-shadow: 0 0 18px rgba(255,0,255,0.4); }
+    #start-screen button:hover { transform: translateY(-2px); box-shadow: 0 0 18px rgba(130,180,210,0.4); }
     #start-screen button:disabled { opacity: 0.6; cursor: progress; transform: none; box-shadow: none; }
     #overlay-message {
       position: absolute;
@@ -125,7 +127,7 @@
       left: 10px;
       padding: 6px 10px;
       background: rgba(0,0,0,0.35);
-      color: #0ff;
+      color: #9fe3c1;
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -135,34 +137,63 @@
       align-items: center;
       gap: 8px;
       padding: 6px 10px;
-      border: 1px solid rgba(0,255,200,0.35);
+      border: 1px solid rgba(90,220,180,0.35);
       background: rgba(0,0,0,0.25);
       pointer-events: auto;
       min-width: 160px;
     }
     #weapon-badge img { width: 36px; height: 36px; }
     #weapon-badge .weapon-name { font-weight: bold; font-size: 13px; }
+    #boss-bar {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(480px, 90vw);
+      height: 14px;
+      border: 1px solid rgba(220,120,90,0.6);
+      background: rgba(20,10,10,0.6);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #boss-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, rgba(220,150,100,0.9), rgba(255,190,140,0.85));
+      width: 0%;
+    }
+    #boss-bar .label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #f7e8d2;
+      text-shadow: 0 0 6px #c96;
+    }
   </style>
 </head>
 <body>
   <div id="game-container">
     <div id="start-screen">
-      <div style="font-size:22px;">Echoes of the Last Web</div>
+      <div style="font-size:22px;">Graves of the Last Light</div>
       <div>WASD или стрелки — движение. Автоатака выбирает ближайшую цель.</div>
-      <div>Выбери стартовое оружие, затем нажми Enter/Space или кликни, чтобы начать.</div>
-      <div id="weapon-hint" style="font-size:13px;color:#8df;">Оружие не выбрано</div>
+      <div>Выбери оружие героя и нажми Enter/Space или кликни, чтобы начать.</div>
+      <div id="weapon-hint" style="font-size:13px;color:#cde8d4;">Оружие не выбрано</div>
       <div id="weapon-choices"></div>
-      <div style="font-size:12px;color:#8df;max-width:360px;line-height:1.4;">Если экран завис, открой через локальный сервер: <code>python -m http.server 8000</code>.</div>
+      <div style="font-size:12px;color:#8fb6a4;max-width:360px;line-height:1.4;">Если экран завис, открой через локальный сервер: <code>python -m http.server 8000</code>.</div>
       <button id="start-button">Запуск</button>
-      <div id="run-summary" style="font-size:12px;color:#8df;max-width:360px;"></div>
+      <div id="run-summary" style="font-size:12px;color:#8fb6a4;max-width:360px;"></div>
     </div>
     <div id="upgrade-panel"></div>
     <div id="ui-layer">
       <div id="stats"></div>
       <div id="weapon-badge"><img alt="weapon" /><div class="weapon-name">---</div></div>
       <div id="timer"></div>
+      <div id="boss-bar"><div class="fill"></div><div class="label"></div></div>
     </div>
-    <div id="overlay-message">Echoes of the Last Web — выживай среди цифровых руин</div>
+    <div id="overlay-message">Проклятое кладбище хранит секреты — держись в живых</div>
   </div>
   <script>
     (function loadGame() {
@@ -185,7 +216,6 @@
       };
 
       if (window.location.protocol === 'file:') {
-        // file:// чаще всего блокирует ES-модули в Chrome/Edge — сразу грузим офлайн-бандл
         loadOffline();
       } else {
         loadModules();

@@ -6,38 +6,50 @@ class SpawnSystem {
   }
 
   reset() {
-    this.timer = 1.6;
+    this.timer = 2;
   }
 
-  update(dt, elapsed, spawnFn, playerPos) {
+  update(dt, elapsed, spawnFn, playerPos, activeBoss) {
     this.timer -= dt;
-    const difficulty = 1 + elapsed / 120;
-    const interval = Math.max(0.6, 1.8 - elapsed / 90);
+    const difficulty = 1 + elapsed / 160;
+    const interval = Math.max(0.6, 2 - elapsed / 140);
     if (this.timer <= 0) {
       this.timer = interval;
-      const count = 1 + Math.floor(elapsed / 35);
+      let count = 1 + Math.floor(elapsed / 50);
+      if (elapsed > 300) {
+        count += 2; // скелеты подступают ордой после пятой минуты
+      }
       for (let i = 0; i < count; i++) {
-        const enemy = this.createEnemy(difficulty, playerPos);
+        const enemy = this.createEnemy(difficulty, playerPos, elapsed, activeBoss);
         spawnFn(enemy);
       }
     }
   }
 
-  createEnemy(difficulty, playerPos) {
+  createEnemy(difficulty, playerPos, elapsed, activeBoss) {
     const roll = Math.random();
-    let type = 'glitchBug';
-    if (roll > 0.82) type = 'corruptedCrawler';
-    else if (roll > 0.6) type = 'dataLeech';
-    else if (roll > 0.38) type = 'nullWraith';
+    let type = 'undead';
+    if (elapsed > 300 && roll > 0.3) {
+      type = 'skeleton';
+    } else if (roll > 0.82) type = 'vampire';
+    else if (roll > 0.55) type = 'undead';
+    else type = 'vampire';
+
+    if (activeBoss && !activeBoss.isAlive) {
+      activeBoss = null;
+    }
 
     const angle = Math.random() * Math.PI * 2;
-    const distance = 440 + Math.random() * 160;
+    const distance = 460 + Math.random() * 180;
     const position = {
       x: playerPos.x + Math.cos(angle) * distance,
       y: playerPos.y + Math.sin(angle) * distance,
     };
 
-    const eliteBoost = Math.random() < 0.12 ? 1.5 : 1;
+    const eliteBoost = Math.random() < 0.1 ? 1.35 : 1;
+    if (type === 'skeleton') {
+      return new Enemy(type, position, Math.max(0.8, difficulty * 0.8));
+    }
     return new Enemy(type, position, difficulty * eliteBoost);
   }
 }

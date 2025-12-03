@@ -33,11 +33,11 @@ class Renderer {
     const c = off.getContext('2d');
     const imageData = c.createImageData(off.width, off.height);
     for (let i = 0; i < imageData.data.length; i += 4) {
-      const v = Math.random() * 80;
-      imageData.data[i] = 0;
+      const v = 20 + Math.random() * 90;
+      imageData.data[i] = 30;
       imageData.data[i + 1] = v;
-      imageData.data[i + 2] = v;
-      imageData.data[i + 3] = 40;
+      imageData.data[i + 2] = 40;
+      imageData.data[i + 3] = 45;
     }
     c.putImageData(imageData, 0, 0);
     return this.ctx.createPattern(off, 'repeat');
@@ -49,18 +49,18 @@ class Renderer {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.globalAlpha = 1;
-    this.ctx.fillStyle = '#050510';
+    this.ctx.fillStyle = '#0b0f12';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.globalAlpha = 0.5;
+    this.ctx.globalAlpha = 0.45;
     this.ctx.fillStyle = this.bgNoise;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.globalAlpha = 1;
-    this.ctx.fillStyle = `rgba(0,255,200,0.08)`;
-    const pulse = 10 + Math.sin(time * 0.5) * 5;
-    for (let x = 0; x < this.canvas.width; x += 64) {
-      for (let y = 0; y < this.canvas.height; y += 64) {
-        this.ctx.fillRect(x, y, pulse, 1);
-        this.ctx.fillRect(x, y, 1, pulse);
+    this.ctx.fillStyle = `rgba(80,110,96,0.15)`;
+    const pulse = 6 + Math.sin(time * 0.6) * 3;
+    for (let x = 0; x < this.canvas.width; x += 72) {
+      for (let y = 0; y < this.canvas.height; y += 72) {
+        this.ctx.fillRect(x, y, pulse, 1.5);
+        this.ctx.fillRect(x, y, 1.5, pulse);
       }
     }
   }
@@ -95,7 +95,7 @@ class Renderer {
     } else if (Math.abs(player.velocity.x) < 2 && Math.abs(player.velocity.y) < 2) {
       frame = this.assets.images[set.idle[0]];
     }
-    this.drawSprite(frame, x, y + bob, { scale: 1.5 });
+    this.drawSprite(frame, x, y + bob, { scale: 1.6 });
     player.orbitals.forEach((orb) => {
       const ox = x + Math.cos(orb.angle) * orb.radius;
       const oy = y + Math.sin(orb.angle) * orb.radius;
@@ -108,17 +108,19 @@ class Renderer {
   drawEnemy(enemy, spriteSets) {
     const { x, y } = this.worldToScreen(enemy.position);
     const bob = Math.sin(enemy.walkCycle * 8) * 2;
-    const frames = spriteSets.enemies[enemy.type] || spriteSets.enemies.glitchBug;
+    const frames = spriteSets.enemies[enemy.type] || spriteSets.enemies.undead;
     const frame = this.assets.images[frames[Math.floor(enemy.walkCycle * 4) % frames.length]];
     const alpha = enemy.hurtTimer > 0 ? 0.7 : 1;
-    this.drawSprite(frame, x, y + bob, { scale: 1.5, alpha });
+    const scale = enemy.isBoss ? 2.1 : 1.5;
+    this.drawSprite(frame, x, y + bob, { scale, alpha });
   }
 
   drawProjectile(projectile, spriteSets) {
     const { x, y } = this.worldToScreen(projectile.position);
-    const spriteKey = spriteSets.projectiles[projectile.sprite] || spriteSets.projectiles.shard;
+    const spriteKey = spriteSets.projectiles[projectile.sprite] || spriteSets.projectiles.arrow;
     const img = this.assets.images[spriteKey];
-    this.drawSprite(img, x, y, { scale: 1.2, rotation: projectile.rotation || 0 });
+    const scale = projectile.kind === 'melee' ? 1.9 : 1.2;
+    this.drawSprite(img, x, y, { scale, rotation: projectile.rotation || 0, alpha: 0.95 });
   }
 
   drawBackground(center) {
@@ -137,7 +139,7 @@ class Renderer {
     this.ctx.save();
     this.ctx.translate(this.canvas.width / 2 - (center.x % 128), this.canvas.height / 2 - (center.y % 128));
     this.ctx.fillStyle = this.tilePattern;
-    this.ctx.globalAlpha = 0.75;
+    this.ctx.globalAlpha = 0.8;
     this.ctx.fillRect(-128, -128, this.canvas.width + 256, this.canvas.height + 256);
     this.ctx.restore();
   }

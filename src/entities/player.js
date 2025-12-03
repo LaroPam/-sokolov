@@ -5,8 +5,8 @@ class Player {
   constructor(x, y, weaponDef) {
     this.position = { x, y };
     this.velocity = { x: 0, y: 0 };
-    this.health = 140;
-    this.maxHealth = 140;
+    this.health = 160;
+    this.maxHealth = 160;
     this.level = 1;
     this.experience = 0;
     this.experienceToLevel = 45;
@@ -15,23 +15,25 @@ class Player {
     this.attackFlash = 0;
     this.walkCycle = 0;
     const baseStats = {
-      speed: 170,
-      damage: 12,
-      attackRadius: 280,
+      speed: 180,
+      damage: 14,
+      attackRadius: 260,
       attackCooldown: 0.9,
       mitigation: 0,
-      projectileSpeed: 340,
+      projectileSpeed: 320,
     };
 
     const fallbackWeapon = {
+      kind: 'ranged',
       count: 1,
-      spread: 0.12,
-      projectile: 'shard',
+      spread: 0.1,
+      projectile: 'arrow',
       lifespan: 1.7,
+      pierce: 0,
     };
 
-    this.weaponId = weaponDef?.id || 'shard';
-    this.weaponName = weaponDef?.name || 'Осколочный резонатор';
+    this.weaponId = weaponDef?.id || 'sword';
+    this.weaponName = weaponDef?.name || 'Клинок стража';
     this.weaponIcon = weaponDef?.icon;
 
     this.stats = { ...baseStats, ...(weaponDef?.stats || {}) };
@@ -41,7 +43,7 @@ class Player {
 
     const startingOrbitals = weaponDef?.startingOrbitals || 0;
     for (let i = 0; i < startingOrbitals; i++) {
-      this.addOrbital({ radius: 76, speed: 2 + i * 0.2, damage: this.stats.damage * 0.5, sprite: 'default' });
+      this.addOrbital({ radius: 78 + i * 6, speed: 2 + i * 0.15, damage: this.stats.damage * 0.55, sprite: 'default' });
     }
   }
 
@@ -74,7 +76,7 @@ class Player {
     });
   }
 
-  tryAttack(target) {
+  tryAttack(target, enemies = []) {
     if (!target || this.attackTimer > 0 || !this.isAlive) return [];
     this.attackTimer = this.stats.attackCooldown;
     this.attackFlash = 0.22;
@@ -83,8 +85,31 @@ class Player {
     const dy = target.position.y - this.position.y;
     const baseAngle = Math.atan2(dy, dx);
     const shots = [];
+
+    if (this.weapon.kind === 'melee') {
+      shots.push(
+        new Projectile({
+          x: this.position.x,
+          y: this.position.y,
+          vx: 0,
+          vy: 0,
+          damage: this.stats.damage,
+          lifespan: 0.25,
+          sprite: this.weapon.sprite || 'sword',
+          rotation: baseAngle,
+          pierce: -1,
+          kind: 'melee',
+          arc: this.weapon.arc || 1.1,
+          owner: this,
+          follow: true,
+        }),
+      );
+      return shots;
+    }
+
     const count = this.weapon.count;
     const spread = this.weapon.spread;
+    const pierce = this.weapon.pierce ?? 0;
     for (let i = 0; i < count; i++) {
       const offset = spread * ((i / (count - 1 || 1)) - 0.5);
       const angle = baseAngle + offset;
@@ -97,8 +122,11 @@ class Player {
           vy: dir.y * this.stats.projectileSpeed,
           damage: this.stats.damage,
           lifespan: this.weapon.lifespan || 1.7,
-          sprite: this.weapon.projectile || 'shard',
+          sprite: this.weapon.projectile || 'arrow',
           rotation: angle,
+          pierce,
+          splashRadius: this.weapon.splashRadius || 0,
+          kind: 'ranged',
         }),
       );
     }
@@ -123,8 +151,8 @@ class Player {
     while (this.experience >= this.experienceToLevel) {
       this.experience -= this.experienceToLevel;
       this.level += 1;
-      this.experienceToLevel = Math.round(this.experienceToLevel * 1.15 + 20);
-      if (onLevelUp) onLevelUp();
+      this.experienceToLevel = Math.round(this.experienceToLevel * 1.12 + 18);
+      onLevelUp?.();
     }
   }
 }

@@ -12,6 +12,7 @@ const upgradePanel = document.getElementById('upgrade-panel');
 const weaponChoices = document.getElementById('weapon-choices');
 const weaponHint = document.getElementById('weapon-hint');
 const weaponBadge = document.getElementById('weapon-badge');
+const bossBar = document.getElementById('boss-bar');
 
 let game = null;
 let isBooting = false;
@@ -88,6 +89,7 @@ function attachStartListeners() {
           assets,
           weaponId: selectedWeapon,
           weaponBadge,
+          bossBar,
           onGameOver: ({ timeSurvived, kills }) => {
             showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`);
           },

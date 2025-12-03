@@ -2,6 +2,7 @@ import Renderer from './engine/renderer.js';
 import Input from './engine/input.js';
 import GameLoop from './engine/loop.js';
 import Player from './entities/player.js';
+import Enemy from './entities/enemy.js';
 import SpawnSystem from './systems/spawnSystem.js';
 import CollisionSystem from './systems/collisionSystem.js';
 import UpgradeSystem from './systems/upgradeSystem.js';
@@ -9,7 +10,7 @@ import { distance } from './utils/math.js';
 import { getWeaponById } from './data/weapons.js';
 
 class Game {
-  constructor({ container, statsEl, timerEl, upgradePanel, onGameOver, assets, weaponId, weaponBadge }) {
+  constructor({ container, statsEl, timerEl, upgradePanel, onGameOver, assets, weaponId, weaponBadge, bossBar }) {
     this.container = container;
     this.statsEl = statsEl;
     this.timerEl = timerEl;
@@ -18,6 +19,7 @@ class Game {
     this.assets = assets;
     this.weaponId = weaponId;
     this.weaponBadge = weaponBadge;
+    this.bossBar = bossBar;
 
     this.renderer = new Renderer(container, assets);
     this.input = new Input();
@@ -40,6 +42,11 @@ class Game {
     this.state = 'idle';
     this.chainLightning = false;
     this.orbitTimer = 0;
+    this.parryBuff = 0;
+    this.parryMitigation = 0;
+    this.baseMitigation = 0;
+    this.activeBoss = null;
+    this.nextBossTime = 300;
   }
 
   start() {
@@ -50,6 +57,7 @@ class Game {
   reset() {
     this.weaponDef = getWeaponById(this.weaponId);
     this.entities.player = new Player(0, 0, this.weaponDef);
+    this.baseMitigation = this.entities.player.stats.mitigation;
     this.entities.enemies = [];
     this.entities.projectiles = [];
     this.spawnSystem.reset();
@@ -58,9 +66,13 @@ class Game {
     this.upgradePanel.innerHTML = '';
     this.chainLightning = false;
     this.orbitTimer = 0;
+    this.parryBuff = 0;
+    this.activeBoss = null;
+    this.nextBossTime = 300;
     this.elapsed = 0;
     this.kills = 0;
     this.state = 'playing';
+    this.updateBossBar();
   }
 
   destroy() {
@@ -82,12 +94,20 @@ class Game {
     const { player, enemies, projectiles } = this.entities;
     this.elapsed += dt;
 
+    if (this.parryBuff > 0) {
+      this.parryBuff -= dt;
+      player.stats.mitigation = Math.min(0.6, this.baseMitigation + this.parryMitigation);
+    } else {
+      player.stats.mitigation = this.baseMitigation;
+    }
+
     player.update(dt, this.input);
 
-    this.spawnSystem.update(dt, this.elapsed, (enemy) => enemies.push(enemy), player.position);
+    this.spawnSystem.update(dt, this.elapsed, (enemy) => enemies.push(enemy), player.position, this.activeBoss);
+    this.handleBossSpawn();
 
     const target = this.findNearestEnemy(player, enemies);
-    const newProjectiles = player.tryAttack(target, dt);
+    const newProjectiles = player.tryAttack(target, enemies);
     newProjectiles.forEach((p) => projectiles.push(p));
 
     enemies.forEach((enemy) => enemy.update(dt, player.position));
@@ -97,14 +117,13 @@ class Game {
 
     CollisionSystem.handleProjectiles(projectiles, enemies, (enemy, damage) => {
       enemy.takeDamage(damage);
-      if (this.chainLightning) {
-        const secondary = enemies.find((other) => other !== enemy && other.isAlive && distance(other.position, enemy.position) < 220);
-        if (secondary) {
-          secondary.takeDamage(damage * 0.45);
-        }
-      }
       if (!enemy.isAlive) {
         this.kills += 1;
+        if (enemy.isBoss) {
+          this.activeBoss = null;
+          this.updateBossBar();
+          this.nextBossTime = this.elapsed + 300;
+        }
         player.gainExperience(enemy.rewardXp, () => this.onLevelUp());
       }
     });
@@ -163,6 +182,22 @@ class Game {
     });
   }
 
+  handleBossSpawn() {
+    if (this.activeBoss && this.activeBoss.isAlive) return;
+    if (this.elapsed >= this.nextBossTime) {
+      const playerPos = this.entities.player.position;
+      const angle = Math.random() * Math.PI * 2;
+      const distanceFromPlayer = 520;
+      const position = {
+        x: playerPos.x + Math.cos(angle) * distanceFromPlayer,
+        y: playerPos.y + Math.sin(angle) * distanceFromPlayer,
+      };
+      this.activeBoss = new Enemy('graveLord', position, 1 + this.elapsed / 240);
+      this.entities.enemies.push(this.activeBoss);
+      this.updateBossBar();
+    }
+  }
+
   onLevelUp() {
     this.pause();
     const options = this.upgradeSystem.getChoices();
@@ -207,6 +242,24 @@ class Game {
         iconEl.src = icon;
         iconEl.alt = id;
       }
+    }
+
+    this.updateBossBar();
+  }
+
+  updateBossBar() {
+    if (!this.bossBar) return;
+    const fill = this.bossBar.querySelector('.fill');
+    const label = this.bossBar.querySelector('.label');
+    if (this.activeBoss && this.activeBoss.isAlive) {
+      const ratio = this.activeBoss.health / this.activeBoss.maxHealth;
+      fill.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
+      label.textContent = 'Повелитель костей';
+      this.bossBar.style.opacity = 1;
+    } else {
+      this.bossBar.style.opacity = 0;
+      fill.style.width = '0%';
+      label.textContent = '';
     }
   }
 }

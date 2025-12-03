@@ -1,149 +1,206 @@
 const WEAPON_DEFS = [
   {
-    id: 'shard',
-    name: 'Осколочный резонатор',
-    description: 'Сбалансированное оружие: средний урон, базовый темп и умеренный разброс.',
-    icon: './assets/weapon_shard_icon.svg',
+    id: 'sword',
+    name: 'Клинок стража',
+    description: 'Ближний sweeping удар. Высокий урон, но нужно подойти к врагам.',
+    icon: './assets/weapon_sword_icon.svg',
     stats: {
-      damage: 12,
-      attackCooldown: 0.9,
-      attackRadius: 280,
-      projectileSpeed: 340,
+      damage: 26,
+      attackCooldown: 0.95,
+      attackRadius: 210,
+      projectileSpeed: 0,
+      speed: 190,
     },
     weapon: {
+      kind: 'melee',
+      arc: 1.35,
+      range: 130,
       count: 1,
-      spread: 0.12,
-      projectile: 'shard',
-      lifespan: 1.7,
+      sprite: 'sword',
     },
     startingOrbitals: 0,
     upgrades: [
       {
-        title: 'Дуплекс-осколок',
-        description: '+1 снаряд и чуть больший веер удара',
+        title: 'Широкий размах',
+        description: '+25% шире дуга клинка и небольшой push к скорости',
         apply: (player) => {
-          player.weapon.count = Math.min(player.weapon.count + 1, 5);
-          player.weapon.spread += 0.06;
+          player.weapon.arc *= 1.25;
+          player.stats.speed += 10;
         },
       },
       {
-        title: 'Сжатая сборка',
-        description: '-15% к перезарядке автоатаки',
+        title: 'Закалённая сталь',
+        description: '+20% к урону меча',
         apply: (player) => {
-          player.stats.attackCooldown *= 0.85;
+          player.stats.damage *= 1.2;
         },
       },
       {
-        title: 'Кристальный урон',
-        description: '+25% к урону осколков',
-        apply: (player) => {
-          player.stats.damage *= 1.25;
-        },
-      },
-      {
-        title: 'Инерция пакетов',
-        description: '+20% к скорости снарядов',
-        apply: (player) => {
-          player.stats.projectileSpeed *= 1.2;
-        },
-      },
-    ],
-  },
-  {
-    id: 'arc',
-    name: 'Дуга данных',
-    description: 'Тяжелые дуговые копья: высокий урон, чуть медленнее перезарядка.',
-    icon: './assets/weapon_arc_icon.svg',
-    stats: {
-      damage: 18,
-      attackCooldown: 1.05,
-      attackRadius: 320,
-      projectileSpeed: 380,
-    },
-    weapon: {
-      count: 1,
-      spread: 0.05,
-      projectile: 'arc',
-      lifespan: 1.9,
-    },
-    startingOrbitals: 0,
-    upgrades: [
-      {
-        title: 'Двойная дуга',
-        description: '+1 дуговой снаряд с плотным конусом',
-        apply: (player) => {
-          player.weapon.count = Math.min(player.weapon.count + 1, 3);
-          player.weapon.spread = Math.max(0.04, player.weapon.spread - 0.01);
-        },
-      },
-      {
-        title: 'Глубокий прожиг',
-        description: '+30% к урону дуги',
-        apply: (player) => {
-          player.stats.damage *= 1.3;
-        },
-      },
-      {
-        title: 'Импульс ускорения',
-        description: '-18% к перезарядке дуги',
+        title: 'Укороченная стойка',
+        description: '-18% к перезарядке удара',
         apply: (player) => {
           player.stats.attackCooldown *= 0.82;
         },
       },
       {
-        title: 'Цепная искра',
-        description: 'Попадания дуги дают искру, которая бьет еще одну цель (45% урона)',
+        title: 'Парирование',
+        description: 'После удара получаете 10% уворота (митиг.) на 3с',
         apply: (player, game) => {
-          game.chainLightning = true;
+          game.parryBuff = 3;
+          game.parryMitigation = 0.1;
         },
       },
     ],
   },
   {
-    id: 'fan',
-    name: 'Веер импульсов',
-    description: 'Сразу три импульсных выстрела, большой веер и быстрый темп.',
-    icon: './assets/weapon_fan_icon.svg',
+    id: 'knife',
+    name: 'Метательные клинки',
+    description: 'Быстрые ножи вылетают один за другим, пробивая щели в орде.',
+    icon: './assets/weapon_knife_icon.svg',
     stats: {
-      damage: 9,
-      attackCooldown: 0.85,
-      attackRadius: 260,
-      projectileSpeed: 360,
+      damage: 12,
+      attackCooldown: 0.55,
+      attackRadius: 320,
+      projectileSpeed: 420,
     },
     weapon: {
-      count: 3,
-      spread: 0.35,
-      projectile: 'shard',
-      lifespan: 1.4,
+      kind: 'ranged',
+      count: 1,
+      spread: 0.08,
+      projectile: 'knife',
+      lifespan: 1.6,
+      pierce: 0,
     },
     startingOrbitals: 0,
     upgrades: [
       {
-        title: 'Расщепленный веер',
-        description: '+2 импульса и шире конус',
+        title: 'Двойной выпад',
+        description: '+1 нож в очереди, плотнее конус',
         apply: (player) => {
-          player.weapon.count = Math.min(player.weapon.count + 2, 7);
-          player.weapon.spread += 0.05;
+          player.weapon.count = Math.min(player.weapon.count + 1, 4);
+          player.weapon.spread = Math.max(0.05, player.weapon.spread - 0.015);
         },
       },
       {
-        title: 'Фокусировка луча',
-        description: 'Сужает веер и ускоряет импульсы',
+        title: 'Отточенные лезвия',
+        description: '+25% к урону ножей',
         apply: (player) => {
-          player.weapon.spread = Math.max(0.22, player.weapon.spread - 0.08);
-          player.stats.projectileSpeed *= 1.18;
+          player.stats.damage *= 1.25;
         },
       },
       {
-        title: 'Рекурсивная подача',
-        description: '-16% к перезарядке и +10% урона импульсов',
+        title: 'Быстрый бросок',
+        description: '-15% к перезарядке',
+        apply: (player) => {
+          player.stats.attackCooldown *= 0.85;
+        },
+      },
+      {
+        title: 'Теневой шаг',
+        description: '+12% скорости передвижения',
+        apply: (player) => {
+          player.stats.speed *= 1.12;
+        },
+      },
+    ],
+  },
+  {
+    id: 'crossbow',
+    name: 'Арбалетный болт',
+    description: 'Медленный, но тяжелый выстрел, проходящий насквозь.',
+    icon: './assets/weapon_crossbow_icon.svg',
+    stats: {
+      damage: 34,
+      attackCooldown: 1.25,
+      attackRadius: 360,
+      projectileSpeed: 520,
+    },
+    weapon: {
+      kind: 'ranged',
+      count: 1,
+      spread: 0,
+      projectile: 'bolt',
+      lifespan: 2.2,
+      pierce: 2,
+    },
+    startingOrbitals: 0,
+    upgrades: [
+      {
+        title: 'Проникающий наконечник',
+        description: '+2 к пронзанию',
+        apply: (player) => {
+          player.weapon.pierce = (player.weapon.pierce || 0) + 2;
+        },
+      },
+      {
+        title: 'Тяжёлое плечо',
+        description: '+30% к урону болтов',
+        apply: (player) => {
+          player.stats.damage *= 1.3;
+        },
+      },
+      {
+        title: 'Перезарядка на бедре',
+        description: '-16% к перезарядке',
         apply: (player) => {
           player.stats.attackCooldown *= 0.84;
-          player.stats.damage *= 1.1;
         },
       },
       {
-        title: 'Сканер сети',
+        title: 'Дубовая колодка',
+        description: '+25 к максимуму здоровья',
+        apply: (player) => {
+          player.maxHealth += 25;
+          player.health += 25;
+        },
+      },
+    ],
+  },
+  {
+    id: 'bow',
+    name: 'Лучные залпы',
+    description: 'Несколько медленных стрел летят дугой, расчищая коридор.',
+    icon: './assets/weapon_bow_icon.svg',
+    stats: {
+      damage: 11,
+      attackCooldown: 1.05,
+      attackRadius: 360,
+      projectileSpeed: 340,
+    },
+    weapon: {
+      kind: 'ranged',
+      count: 3,
+      spread: 0.35,
+      projectile: 'arrow',
+      lifespan: 1.8,
+      pierce: 1,
+    },
+    startingOrbitals: 0,
+    upgrades: [
+      {
+        title: 'Дополнительная тетива',
+        description: '+1 стрела в залпе',
+        apply: (player) => {
+          player.weapon.count = Math.min(player.weapon.count + 1, 5);
+        },
+      },
+      {
+        title: 'Усиленное перо',
+        description: '+15% урона и +10% скорости стрел',
+        apply: (player) => {
+          player.stats.damage *= 1.15;
+          player.stats.projectileSpeed *= 1.1;
+        },
+      },
+      {
+        title: 'Быстрый взвод',
+        description: '-14% к перезарядке',
+        apply: (player) => {
+          player.stats.attackCooldown *= 0.86;
+        },
+      },
+      {
+        title: 'Дальний прицел',
         description: '+20% радиуса автоатаки',
         apply: (player) => {
           player.stats.attackRadius *= 1.2;
@@ -152,107 +209,55 @@ const WEAPON_DEFS = [
     ],
   },
   {
-    id: 'mine',
-    name: 'Импульсные мины',
-    description: 'Медленные, тяжелые снаряды, которые висят чуть дольше.',
-    icon: './assets/weapon_mine_icon.svg',
+    id: 'staff',
+    name: 'Жезл искр',
+    description: 'Медленные сферы взрываются и цепляют группу врагов.',
+    icon: './assets/weapon_staff_icon.svg',
     stats: {
-      damage: 22,
-      attackCooldown: 1.35,
-      attackRadius: 260,
-      projectileSpeed: 230,
+      damage: 16,
+      attackCooldown: 1,
+      attackRadius: 340,
+      projectileSpeed: 260,
     },
     weapon: {
+      kind: 'ranged',
       count: 1,
-      spread: 0.02,
-      projectile: 'arc',
-      lifespan: 2.2,
+      spread: 0.08,
+      projectile: 'orb',
+      lifespan: 2,
+      splashRadius: 80,
+      pierce: 0,
     },
-    startingOrbitals: 0,
+    startingOrbitals: 1,
     upgrades: [
       {
-        title: 'Дуплекс-мины',
-        description: 'Выстреливает +1 мину рядом с основной',
+        title: 'Второй заряд',
+        description: '+1 сфера и чуть шире конус',
         apply: (player) => {
           player.weapon.count = Math.min(player.weapon.count + 1, 3);
-          player.weapon.spread = Math.max(player.weapon.spread, 0.06);
+          player.weapon.spread += 0.06;
         },
       },
       {
-        title: 'Растянутый импульс',
-        description: '+20% к длительности и урону мин',
+        title: 'Вспышка некера',
+        description: '+25% к радиусу взрыва',
         apply: (player) => {
-          player.weapon.lifespan *= 1.2;
-          player.stats.damage *= 1.2;
+          player.weapon.splashRadius = Math.round((player.weapon.splashRadius || 60) * 1.25);
         },
       },
       {
-        title: 'Протокол ускорения',
-        description: '-15% к перезарядке мин',
+        title: 'Ткань заклинателя',
+        description: '-15% к перезарядке и +1 орбитальный дух',
         apply: (player) => {
           player.stats.attackCooldown *= 0.85;
+          player.addOrbital({ radius: 90, speed: 2.2, damage: player.stats.damage * 0.6, sprite: 'default' });
         },
       },
       {
-        title: 'Гравитационный якорь',
-        description: 'Мины двигаются быстрее и точнее',
+        title: 'Сжатая мана',
+        description: '+20% к урону сфер',
         apply: (player) => {
-          player.stats.projectileSpeed *= 1.22;
-          player.weapon.spread = Math.max(0.015, player.weapon.spread - 0.01);
-        },
-      },
-    ],
-  },
-  {
-    id: 'orbit',
-    name: 'Орбитальный копьевой',
-    description: 'Базовая автоатака и стартовые орбитальные дроны.',
-    icon: './assets/weapon_orbit_icon.svg',
-    stats: {
-      damage: 11,
-      attackCooldown: 1,
-      attackRadius: 300,
-      projectileSpeed: 320,
-    },
-    weapon: {
-      count: 1,
-      spread: 0.04,
-      projectile: 'shard',
-      lifespan: 1.6,
-    },
-    startingOrbitals: 2,
-    upgrades: [
-      {
-        title: 'Дополнительный дрон',
-        description: '+1 орбитальный дрон',
-        apply: (player) => {
-          player.addOrbital({ radius: 78, speed: 2.4, damage: player.stats.damage * 0.55, sprite: 'default' });
-        },
-      },
-      {
-        title: 'Сжатое копьё',
-        description: '-18% перезарядки и более быстрый выстрел',
-        apply: (player) => {
-          player.stats.attackCooldown *= 0.82;
-          player.stats.projectileSpeed *= 1.15;
-        },
-      },
-      {
-        title: 'Лезвие орбиты',
-        description: 'Орбитальные дроны наносят +30% урона и вращаются быстрее',
-        apply: (player) => {
-          player.orbitals.forEach((orb) => {
-            orb.damage *= 1.3;
-            orb.speed *= 1.15;
-          });
-        },
-      },
-      {
-        title: 'Усиленный шип',
-        description: '+1 снаряд и плотнее прицеливание',
-        apply: (player) => {
-          player.weapon.count = Math.min(player.weapon.count + 1, 3);
-          player.weapon.spread = Math.max(0.02, player.weapon.spread - 0.01);
+          player.stats.damage *= 1.2;
         },
       },
     ],
