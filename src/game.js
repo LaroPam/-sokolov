@@ -6,15 +6,18 @@ import SpawnSystem from './systems/spawnSystem.js';
 import CollisionSystem from './systems/collisionSystem.js';
 import UpgradeSystem from './systems/upgradeSystem.js';
 import { distance } from './utils/math.js';
+import { getWeaponById } from './data/weapons.js';
 
 class Game {
-  constructor({ container, statsEl, timerEl, upgradePanel, onGameOver, assets }) {
+  constructor({ container, statsEl, timerEl, upgradePanel, onGameOver, assets, weaponId, weaponBadge }) {
     this.container = container;
     this.statsEl = statsEl;
     this.timerEl = timerEl;
     this.upgradePanel = upgradePanel;
     this.onGameOver = onGameOver;
     this.assets = assets;
+    this.weaponId = weaponId;
+    this.weaponBadge = weaponBadge;
 
     this.renderer = new Renderer(container, assets);
     this.input = new Input();
@@ -45,11 +48,12 @@ class Game {
   }
 
   reset() {
-    this.entities.player = new Player(0, 0);
+    this.weaponDef = getWeaponById(this.weaponId);
+    this.entities.player = new Player(0, 0, this.weaponDef);
     this.entities.enemies = [];
     this.entities.projectiles = [];
     this.spawnSystem.reset();
-    this.upgradeSystem.reset();
+    this.upgradeSystem.configureForWeapon(this.weaponDef);
     this.upgradePanel.style.display = 'none';
     this.upgradePanel.innerHTML = '';
     this.chainLightning = false;
@@ -194,6 +198,16 @@ class Game {
     const { player } = this.entities;
     this.statsEl.textContent = `HP: ${player.health.toFixed(0)}/${player.maxHealth} | Урон: ${player.stats.damage.toFixed(1)} | Скорость: ${player.stats.speed.toFixed(0)} | Орбиты: ${player.orbitals.length}`;
     this.timerEl.textContent = `Время: ${Math.floor(this.elapsed)}с | EXP: ${player.experience.toFixed(0)}/${player.experienceToLevel}`;
+
+    if (this.weaponBadge) {
+      const { name, icon, id } = this.weaponDef || {};
+      this.weaponBadge.querySelector('.weapon-name').textContent = name || 'Оружие';
+      const iconEl = this.weaponBadge.querySelector('img');
+      if (iconEl && icon) {
+        iconEl.src = icon;
+        iconEl.alt = id;
+      }
+    }
   }
 }
 

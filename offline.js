@@ -6,6 +6,11 @@
     playerWalk2: './assets/player_walk2.svg',
     playerAttack: './assets/player_attack.svg',
     playerHurt: './assets/player_hurt.svg',
+    weaponShardIcon: './assets/weapon_shard_icon.svg',
+    weaponArcIcon: './assets/weapon_arc_icon.svg',
+    weaponFanIcon: './assets/weapon_fan_icon.svg',
+    weaponMineIcon: './assets/weapon_mine_icon.svg',
+    weaponOrbitIcon: './assets/weapon_orbit_icon.svg',
     glitch1: './assets/enemy_glitch_1.svg',
     glitch2: './assets/enemy_glitch_2.svg',
     leech1: './assets/enemy_leech_1.svg',
@@ -40,6 +45,13 @@
     orbitals: {
       default: 'orbitalCore',
     },
+    icons: {
+      shard: 'weaponShardIcon',
+      arc: 'weaponArcIcon',
+      fan: 'weaponFanIcon',
+      mine: 'weaponMineIcon',
+      orbit: 'weaponOrbitIcon',
+    },
     background: 'backgroundTile',
   };
 
@@ -72,6 +84,86 @@
     return { x: x / len, y: y / len };
   };
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+  const WEAPON_DEFS = [
+    {
+      id: 'shard',
+      name: 'Осколочный резонатор',
+      description: 'Сбалансированное оружие: средний урон, базовый темп и умеренный разброс.',
+      icon: './assets/weapon_shard_icon.svg',
+      stats: { damage: 12, attackCooldown: 0.9, attackRadius: 280, projectileSpeed: 340 },
+      weapon: { count: 1, spread: 0.12, projectile: 'shard', lifespan: 1.7 },
+      startingOrbitals: 0,
+      upgrades: [
+        { title: 'Дуплекс-осколок', description: '+1 снаряд и чуть больший веер удара', apply: (p) => { p.weapon.count = Math.min(p.weapon.count + 1, 5); p.weapon.spread += 0.06; } },
+        { title: 'Сжатая сборка', description: '-15% к перезарядке автоатаки', apply: (p) => { p.stats.attackCooldown *= 0.85; } },
+        { title: 'Кристальный урон', description: '+25% к урону осколков', apply: (p) => { p.stats.damage *= 1.25; } },
+        { title: 'Инерция пакетов', description: '+20% к скорости снарядов', apply: (p) => { p.stats.projectileSpeed *= 1.2; } },
+      ],
+    },
+    {
+      id: 'arc',
+      name: 'Дуга данных',
+      description: 'Тяжелые дуговые копья: высокий урон, чуть медленнее перезарядка.',
+      icon: './assets/weapon_arc_icon.svg',
+      stats: { damage: 18, attackCooldown: 1.05, attackRadius: 320, projectileSpeed: 380 },
+      weapon: { count: 1, spread: 0.05, projectile: 'arc', lifespan: 1.9 },
+      startingOrbitals: 0,
+      upgrades: [
+        { title: 'Двойная дуга', description: '+1 дуговой снаряд с плотным конусом', apply: (p) => { p.weapon.count = Math.min(p.weapon.count + 1, 3); p.weapon.spread = Math.max(0.04, p.weapon.spread - 0.01); } },
+        { title: 'Глубокий прожиг', description: '+30% к урону дуги', apply: (p) => { p.stats.damage *= 1.3; } },
+        { title: 'Импульс ускорения', description: '-18% к перезарядке дуги', apply: (p) => { p.stats.attackCooldown *= 0.82; } },
+        { title: 'Цепная искра', description: 'Попадания дуги дают искру, которая бьет еще одну цель (45% урона)', apply: (p, g) => { g.chainLightning = true; } },
+      ],
+    },
+    {
+      id: 'fan',
+      name: 'Веер импульсов',
+      description: 'Сразу три импульсных выстрела, большой веер и быстрый темп.',
+      icon: './assets/weapon_fan_icon.svg',
+      stats: { damage: 9, attackCooldown: 0.85, attackRadius: 260, projectileSpeed: 360 },
+      weapon: { count: 3, spread: 0.35, projectile: 'shard', lifespan: 1.4 },
+      startingOrbitals: 0,
+      upgrades: [
+        { title: 'Расщепленный веер', description: '+2 импульса и шире конус', apply: (p) => { p.weapon.count = Math.min(p.weapon.count + 2, 7); p.weapon.spread += 0.05; } },
+        { title: 'Фокусировка луча', description: 'Сужает веер и ускоряет импульсы', apply: (p) => { p.weapon.spread = Math.max(0.22, p.weapon.spread - 0.08); p.stats.projectileSpeed *= 1.18; } },
+        { title: 'Рекурсивная подача', description: '-16% к перезарядке и +10% урона импульсов', apply: (p) => { p.stats.attackCooldown *= 0.84; p.stats.damage *= 1.1; } },
+        { title: 'Сканер сети', description: '+20% радиуса автоатаки', apply: (p) => { p.stats.attackRadius *= 1.2; } },
+      ],
+    },
+    {
+      id: 'mine',
+      name: 'Импульсные мины',
+      description: 'Медленные, тяжелые снаряды, которые висят чуть дольше.',
+      icon: './assets/weapon_mine_icon.svg',
+      stats: { damage: 22, attackCooldown: 1.35, attackRadius: 260, projectileSpeed: 230 },
+      weapon: { count: 1, spread: 0.02, projectile: 'arc', lifespan: 2.2 },
+      startingOrbitals: 0,
+      upgrades: [
+        { title: 'Дуплекс-мины', description: 'Выстреливает +1 мину рядом с основной', apply: (p) => { p.weapon.count = Math.min(p.weapon.count + 1, 3); p.weapon.spread = Math.max(p.weapon.spread, 0.06); } },
+        { title: 'Растянутый импульс', description: '+20% к длительности и урону мин', apply: (p) => { p.weapon.lifespan *= 1.2; p.stats.damage *= 1.2; } },
+        { title: 'Протокол ускорения', description: '-15% к перезарядке мин', apply: (p) => { p.stats.attackCooldown *= 0.85; } },
+        { title: 'Гравитационный якорь', description: 'Мины двигаются быстрее и точнее', apply: (p) => { p.stats.projectileSpeed *= 1.22; p.weapon.spread = Math.max(0.015, p.weapon.spread - 0.01); } },
+      ],
+    },
+    {
+      id: 'orbit',
+      name: 'Орбитальный копьевой',
+      description: 'Базовая автоатака и стартовые орбитальные дроны.',
+      icon: './assets/weapon_orbit_icon.svg',
+      stats: { damage: 11, attackCooldown: 1, attackRadius: 300, projectileSpeed: 320 },
+      weapon: { count: 1, spread: 0.04, projectile: 'shard', lifespan: 1.6 },
+      startingOrbitals: 2,
+      upgrades: [
+        { title: 'Дополнительный дрон', description: '+1 орбитальный дрон', apply: (p) => { p.addOrbital({ radius: 78, speed: 2.4, damage: p.stats.damage * 0.55, sprite: 'default' }); } },
+        { title: 'Сжатое копьё', description: '-18% перезарядки и более быстрый выстрел', apply: (p) => { p.stats.attackCooldown *= 0.82; p.stats.projectileSpeed *= 1.15; } },
+        { title: 'Лезвие орбиты', description: 'Орбитальные дроны наносят +30% урона и вращаются быстрее', apply: (p) => { p.orbitals.forEach((o) => { o.damage *= 1.3; o.speed *= 1.15; }); } },
+        { title: 'Усиленный шип', description: '+1 снаряд и плотнее прицеливание', apply: (p) => { p.weapon.count = Math.min(p.weapon.count + 1, 3); p.weapon.spread = Math.max(0.02, p.weapon.spread - 0.01); } },
+      ],
+    },
+  ];
+
+  const getWeaponById = (id) => WEAPON_DEFS.find((w) => w.id === id) || WEAPON_DEFS[0];
 
   class Projectile {
     constructor({ x, y, vx, vy, damage, lifespan = 1.5, sprite = 'shard', rotation = 0 }) {
@@ -157,7 +249,7 @@
   }
 
   class Player {
-    constructor(x, y) {
+    constructor(x, y, weaponDef) {
       this.position = { x, y };
       this.velocity = { x: 0, y: 0 };
       this.health = 140;
@@ -169,21 +261,23 @@
       this.hurtTimer = 0;
       this.attackFlash = 0;
       this.walkCycle = 0;
-      this.stats = {
-        speed: 170,
-        damage: 12,
-        attackRadius: 280,
-        attackCooldown: 0.9,
-        mitigation: 0,
-        projectileSpeed: 340,
-      };
-      this.weapon = {
-        count: 1,
-        spread: 0.12,
-        projectile: 'shard',
-      };
+
+      const baseStats = { speed: 170, damage: 12, attackRadius: 280, attackCooldown: 0.9, mitigation: 0, projectileSpeed: 340 };
+      const fallbackWeapon = { count: 1, spread: 0.12, projectile: 'shard', lifespan: 1.7 };
+
+      this.weaponId = weaponDef?.id || 'shard';
+      this.weaponName = weaponDef?.name || 'Осколочный резонатор';
+      this.weaponIcon = weaponDef?.icon;
+
+      this.stats = { ...baseStats, ...(weaponDef?.stats || {}) };
+      this.weapon = { ...fallbackWeapon, ...(weaponDef?.weapon || {}) };
       this.orbitals = [];
       this.isAlive = true;
+
+      const startingOrbitals = weaponDef?.startingOrbitals || 0;
+      for (let i = 0; i < startingOrbitals; i++) {
+        this.addOrbital({ radius: 76, speed: 2 + i * 0.2, damage: this.stats.damage * 0.5, sprite: 'default' });
+      }
     }
     update(dt, input) {
       if (!this.isAlive) return;
@@ -228,7 +322,7 @@
             vx: dir.x * this.stats.projectileSpeed,
             vy: dir.y * this.stats.projectileSpeed,
             damage: this.stats.damage,
-            lifespan: 1.7,
+            lifespan: this.weapon.lifespan || 1.7,
             sprite: this.weapon.projectile || 'shard',
             rotation: angle,
           }),
@@ -514,124 +608,15 @@
 
   class UpgradeSystem {
     constructor() {
+      this.weapon = null;
       this.createPool();
     }
-    reset() {
+    configureForWeapon(weaponDef) {
+      this.weapon = weaponDef;
       this.createPool();
     }
     createPool() {
-      this.options = [
-        {
-          title: 'Сверхскорость',
-          description: '+20% к скорости перемещения',
-          apply: (player) => {
-            player.stats.speed *= 1.2;
-          },
-        },
-        {
-          title: 'Оптимизация кода',
-          description: '-18% к перезарядке автоатаки',
-          apply: (player) => {
-            player.stats.attackCooldown *= 0.82;
-          },
-        },
-        {
-          title: 'Усиленные пакеты',
-          description: '+25% к урону снарядов',
-          apply: (player) => {
-            player.stats.damage *= 1.25;
-          },
-        },
-        {
-          title: 'Расширенная зона',
-          description: '+18% к радиусу автоатаки',
-          apply: (player) => {
-            player.stats.attackRadius *= 1.18;
-          },
-        },
-        {
-          title: 'Патч регенерации',
-          description: 'Мгновенно восстанавливает 45 HP и увеличивает максимум на 20',
-          apply: (player) => {
-            player.maxHealth += 20;
-            player.health = Math.min(player.maxHealth, player.health + 45);
-          },
-        },
-        {
-          title: 'Орбитальные искры',
-          description: 'Добавляет импульсный разряд вокруг игрока каждые 3.5 секунды',
-          apply: (player, game) => {
-            if (!game.orbitTimer) game.orbitTimer = 0;
-            const originalUpdate = player.update.bind(player);
-            player.update = (dt, input) => {
-              originalUpdate(dt, input);
-              game.orbitTimer += dt;
-              if (game.orbitTimer >= 3.5) {
-                game.orbitTimer = 0;
-                game.entities.enemies.forEach((enemy) => {
-                  if (!enemy.isAlive) return;
-                  const dist = Math.hypot(enemy.position.x - player.position.x, enemy.position.y - player.position.y);
-                  if (dist < 160) {
-                    enemy.takeDamage(player.stats.damage * 1.5);
-                  }
-                });
-              }
-            };
-          },
-        },
-        {
-          title: 'Электрический разряд',
-          description: 'При попадании снаряда цепная искра наносит 45% урона еще одной цели',
-          apply: (player, game) => {
-            game.chainLightning = true;
-          },
-        },
-        {
-          title: 'ASCII-дробовик',
-          description: 'Автоатака выпускает +1 символ с небольшим разбросом',
-          apply: (player) => {
-            player.weapon.count = Math.min(player.weapon.count + 1, 4);
-            player.weapon.spread += 0.06;
-          },
-        },
-        {
-          title: 'Стабильная сборка',
-          description: '-12% входящего урона, +10% к максимуму HP',
-          apply: (player) => {
-            player.stats.mitigation = Math.min(0.35, player.stats.mitigation + 0.12);
-            player.maxHealth = Math.round(player.maxHealth * 1.1);
-            player.health = Math.min(player.maxHealth, player.health + 15);
-          },
-        },
-        {
-          title: 'Орбитальный дрон',
-          description: 'Добавляет дрон-* вокруг героя, наносящий урон в ближнем бою',
-          apply: (player) => {
-            player.addOrbital({ radius: 78, speed: 2.4, damage: player.stats.damage * 0.5, sprite: 'default' });
-          },
-        },
-        {
-          title: 'Глитч-щит',
-          description: '+20% к скорости снарядов, +1 к количеству снарядов, короткий свечащийся барьер',
-          apply: (player) => {
-            player.stats.projectileSpeed *= 1.2;
-            player.weapon.count = Math.min(player.weapon.count + 1, 4);
-            player.addOrbital({ radius: 48, speed: 3.6, damage: player.stats.damage * 0.35, sprite: 'default' });
-          },
-        },
-        {
-          title: 'Глитч-магнит',
-          description: '+25% к радиусу автоатаки и небольшой авто-лечащий тик',
-          apply: (player) => {
-            player.stats.attackRadius *= 1.25;
-            const originalUpdate = player.update.bind(player);
-            player.update = (dt, input) => {
-              originalUpdate(dt, input);
-              player.health = Math.min(player.maxHealth, player.health + dt * 2.5);
-            };
-          },
-        },
-      ];
+      this.options = this.weapon?.upgrades ? [...this.weapon.upgrades] : [];
     }
     getChoices() {
       const shuffled = [...this.options].sort(() => Math.random() - 0.5);
@@ -640,13 +625,15 @@
   }
 
   class Game {
-    constructor({ container, statsEl, timerEl, upgradePanel, onGameOver, assets }) {
+    constructor({ container, statsEl, timerEl, upgradePanel, onGameOver, assets, weaponId, weaponBadge }) {
       this.container = container;
       this.statsEl = statsEl;
       this.timerEl = timerEl;
       this.upgradePanel = upgradePanel;
       this.onGameOver = onGameOver;
       this.assets = assets;
+      this.weaponId = weaponId;
+      this.weaponBadge = weaponBadge;
       this.renderer = new Renderer(container, assets);
       this.input = new Input();
       this.loop = new GameLoop({
@@ -671,11 +658,12 @@
       this.loop.start();
     }
     reset() {
-      this.entities.player = new Player(0, 0);
+      this.weaponDef = getWeaponById(this.weaponId);
+      this.entities.player = new Player(0, 0, this.weaponDef);
       this.entities.enemies = [];
       this.entities.projectiles = [];
       this.spawnSystem.reset();
-      this.upgradeSystem.reset();
+      this.upgradeSystem.configureForWeapon(this.weaponDef);
       this.upgradePanel.style.display = 'none';
       this.upgradePanel.innerHTML = '';
       this.chainLightning = false;
@@ -799,6 +787,15 @@
       const { player } = this.entities;
       this.statsEl.textContent = `HP: ${player.health.toFixed(0)}/${player.maxHealth} | Урон: ${player.stats.damage.toFixed(1)} | Скорость: ${player.stats.speed.toFixed(0)} | Орбиты: ${player.orbitals.length}`;
       this.timerEl.textContent = `Время: ${Math.floor(this.elapsed)}с | EXP: ${player.experience.toFixed(0)}/${player.experienceToLevel}`;
+      if (this.weaponBadge) {
+        const { name, icon, id } = this.weaponDef || {};
+        this.weaponBadge.querySelector('.weapon-name').textContent = name || 'Оружие';
+        const iconEl = this.weaponBadge.querySelector('img');
+        if (iconEl && icon) {
+          iconEl.src = icon;
+          iconEl.alt = id;
+        }
+      }
     }
   }
 
@@ -809,13 +806,39 @@
   const statsEl = document.getElementById('stats');
   const timerEl = document.getElementById('timer');
   const upgradePanel = document.getElementById('upgrade-panel');
+  const weaponChoices = document.getElementById('weapon-choices');
+  const weaponHint = document.getElementById('weapon-hint');
+  const weaponBadge = document.getElementById('weapon-badge');
   let game = null;
   let isBooting = false;
   let assetsPromise = null;
+  let selectedWeapon = null;
+
+  function renderWeaponChoices() {
+    if (!weaponChoices) return;
+    weaponChoices.innerHTML = '';
+    WEAPON_DEFS.forEach((weapon) => {
+      const card = document.createElement('button');
+      card.className = 'weapon-card';
+      card.innerHTML = `
+        <img src="${weapon.icon}" alt="${weapon.id}" />
+        <div class="weapon-title">${weapon.name}</div>
+        <div class="weapon-desc">${weapon.description}</div>
+      `;
+      card.addEventListener('click', () => {
+        selectedWeapon = weapon.id;
+        weaponHint.textContent = `Выбрано: ${weapon.name}`;
+        weaponChoices.querySelectorAll('.weapon-card').forEach((el) => el.classList.remove('selected'));
+        card.classList.add('selected');
+        if (!isBooting) startButton.disabled = false;
+      });
+      weaponChoices.appendChild(card);
+    });
+  }
 
   function showStart(message = '') {
     isBooting = false;
-    startButton.disabled = false;
+    startButton.disabled = !selectedWeapon;
     startButton.textContent = 'Запуск';
     startScreen.style.display = 'flex';
     runSummary.textContent = message;
@@ -831,6 +854,10 @@
 
   const handler = () => {
     if (isBooting || startScreen.style.display === 'none') return;
+    if (!selectedWeapon) {
+      runSummary.textContent = 'Выбери оружие, чтобы начать';
+      return;
+    }
     isBooting = true;
     startButton.disabled = true;
     if (!assetsPromise) assetsPromise = loadAssets();
@@ -846,6 +873,8 @@
           timerEl,
           upgradePanel,
           assets,
+          weaponId: selectedWeapon,
+          weaponBadge,
           onGameOver: ({ timeSurvived, kills }) => {
             showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`);
           },
@@ -863,4 +892,7 @@
       handler();
     }
   });
+
+  renderWeaponChoices();
+  startButton.disabled = true;
 })();

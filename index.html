@@ -29,6 +29,8 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
       font-size: 14px;
       text-shadow: 0 0 4px #0ff;
     }
@@ -73,6 +75,35 @@
       text-shadow: 0 0 6px #0ff;
       z-index: 4;
     }
+    #weapon-choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      width: min(760px, 90vw);
+      margin-top: 6px;
+    }
+    .weapon-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px;
+      border: 1px solid rgba(0,255,200,0.35);
+      background: linear-gradient(135deg, rgba(0,255,200,0.12), rgba(255,0,255,0.08));
+      cursor: pointer;
+      pointer-events: auto;
+      color: #d5f6ff;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .weapon-card img {
+      width: 64px;
+      height: 64px;
+      filter: drop-shadow(0 0 6px rgba(0,255,200,0.35));
+    }
+    .weapon-card .weapon-title { font-weight: bold; text-transform: uppercase; font-size: 14px; }
+    .weapon-card .weapon-desc { font-size: 12px; line-height: 1.3; color: #b8e5ff; }
+    .weapon-card:hover { transform: translateY(-3px); box-shadow: 0 0 12px rgba(0,255,200,0.4); }
+    .weapon-card.selected { outline: 2px solid #0ff; box-shadow: 0 0 14px rgba(0,255,200,0.5); }
     #start-screen button {
       padding: 10px 18px;
       border: 1px solid rgba(0,255,200,0.6);
@@ -99,6 +130,18 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+    #weapon-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border: 1px solid rgba(0,255,200,0.35);
+      background: rgba(0,0,0,0.25);
+      pointer-events: auto;
+      min-width: 160px;
+    }
+    #weapon-badge img { width: 36px; height: 36px; }
+    #weapon-badge .weapon-name { font-weight: bold; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -106,7 +149,9 @@
     <div id="start-screen">
       <div style="font-size:22px;">Echoes of the Last Web</div>
       <div>WASD или стрелки — движение. Автоатака выбирает ближайшую цель.</div>
-      <div>Нажми Enter/Space или кликни, чтобы начать новый забег.</div>
+      <div>Выбери стартовое оружие, затем нажми Enter/Space или кликни, чтобы начать.</div>
+      <div id="weapon-hint" style="font-size:13px;color:#8df;">Оружие не выбрано</div>
+      <div id="weapon-choices"></div>
       <div style="font-size:12px;color:#8df;max-width:360px;line-height:1.4;">Если экран завис, открой через локальный сервер: <code>python -m http.server 8000</code>.</div>
       <button id="start-button">Запуск</button>
       <div id="run-summary" style="font-size:12px;color:#8df;max-width:360px;"></div>
@@ -114,6 +159,7 @@
     <div id="upgrade-panel"></div>
     <div id="ui-layer">
       <div id="stats"></div>
+      <div id="weapon-badge"><img alt="weapon" /><div class="weapon-name">---</div></div>
       <div id="timer"></div>
     </div>
     <div id="overlay-message">Echoes of the Last Web — выживай среди цифровых руин</div>

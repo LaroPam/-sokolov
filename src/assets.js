@@ -4,6 +4,11 @@ const SPRITE_SOURCES = {
   playerWalk2: './assets/player_walk2.svg',
   playerAttack: './assets/player_attack.svg',
   playerHurt: './assets/player_hurt.svg',
+  weaponShardIcon: './assets/weapon_shard_icon.svg',
+  weaponArcIcon: './assets/weapon_arc_icon.svg',
+  weaponFanIcon: './assets/weapon_fan_icon.svg',
+  weaponMineIcon: './assets/weapon_mine_icon.svg',
+  weaponOrbitIcon: './assets/weapon_orbit_icon.svg',
   glitch1: './assets/enemy_glitch_1.svg',
   glitch2: './assets/enemy_glitch_2.svg',
   leech1: './assets/enemy_leech_1.svg',
@@ -37,6 +42,13 @@ const SPRITE_SETS = {
   },
   orbitals: {
     default: 'orbitalCore',
+  },
+  icons: {
+    shard: 'weaponShardIcon',
+    arc: 'weaponArcIcon',
+    fan: 'weaponFanIcon',
+    mine: 'weaponMineIcon',
+    orbit: 'weaponOrbitIcon',
   },
   background: 'backgroundTile',
 };

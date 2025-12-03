@@ -2,7 +2,7 @@ import Projectile from './projectile.js';
 import { clamp, normalize } from '../utils/math.js';
 
 class Player {
-  constructor(x, y) {
+  constructor(x, y, weaponDef) {
     this.position = { x, y };
     this.velocity = { x: 0, y: 0 };
     this.health = 140;
@@ -14,7 +14,7 @@ class Player {
     this.hurtTimer = 0;
     this.attackFlash = 0;
     this.walkCycle = 0;
-    this.stats = {
+    const baseStats = {
       speed: 170,
       damage: 12,
       attackRadius: 280,
@@ -22,13 +22,27 @@ class Player {
       mitigation: 0,
       projectileSpeed: 340,
     };
-    this.weapon = {
+
+    const fallbackWeapon = {
       count: 1,
       spread: 0.12,
       projectile: 'shard',
+      lifespan: 1.7,
     };
+
+    this.weaponId = weaponDef?.id || 'shard';
+    this.weaponName = weaponDef?.name || 'Осколочный резонатор';
+    this.weaponIcon = weaponDef?.icon;
+
+    this.stats = { ...baseStats, ...(weaponDef?.stats || {}) };
+    this.weapon = { ...fallbackWeapon, ...(weaponDef?.weapon || {}) };
     this.orbitals = [];
     this.isAlive = true;
+
+    const startingOrbitals = weaponDef?.startingOrbitals || 0;
+    for (let i = 0; i < startingOrbitals; i++) {
+      this.addOrbital({ radius: 76, speed: 2 + i * 0.2, damage: this.stats.damage * 0.5, sprite: 'default' });
+    }
   }
 
   update(dt, input) {
@@ -82,7 +96,7 @@ class Player {
           vx: dir.x * this.stats.projectileSpeed,
           vy: dir.y * this.stats.projectileSpeed,
           damage: this.stats.damage,
-          lifespan: 1.7,
+          lifespan: this.weapon.lifespan || 1.7,
           sprite: this.weapon.projectile || 'shard',
           rotation: angle,
         }),
