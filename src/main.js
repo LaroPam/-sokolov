@@ -16,10 +16,10 @@ const bossBar = document.getElementById('boss-bar');
 
 let game = null;
 let isBooting = false;
-// Kick off asset generation immediately so the start button never waits on
-// late image events.
-let assetsPromise = loadAssets();
-let selectedWeapon = WEAPON_DEFS[0]?.id || null;
+// Lazy-init assets so the weapon picker is always the first thing the player
+// sees; build the cache only after a loadout is chosen.
+let assetsPromise = null;
+let selectedWeapon = null;
 
 function updateWeaponHint() {
   const weaponName = WEAPON_DEFS.find((w) => w.id === selectedWeapon)?.name;
@@ -31,7 +31,7 @@ function updateWeaponHint() {
 function renderWeaponChoices() {
   if (!weaponChoices) return;
   weaponChoices.innerHTML = '';
-  WEAPON_DEFS.forEach((weapon, index) => {
+  WEAPON_DEFS.forEach((weapon) => {
     const card = document.createElement('button');
     card.className = 'weapon-card';
     card.innerHTML = `
@@ -51,9 +51,6 @@ function renderWeaponChoices() {
     };
     card.addEventListener('click', select);
     weaponChoices.appendChild(card);
-    if (selectedWeapon === weapon.id || (index === 0 && !selectedWeapon)) {
-      select();
-    }
   });
 }
 
@@ -62,7 +59,7 @@ function showStart(message = '') {
   startButton.disabled = !selectedWeapon;
   startButton.textContent = selectedWeapon ? 'Запуск' : 'Выбери оружие';
   startScreen.style.display = 'flex';
-  runSummary.textContent = message;
+  runSummary.textContent = message || 'Сначала выбери оружие на панели выше';
   updateWeaponHint();
 }
 
@@ -136,5 +133,6 @@ function attachStartListeners() {
 attachStartListeners();
 renderWeaponChoices();
 updateWeaponHint();
+runSummary.textContent = 'Сначала выбери оружие на панели выше';
 startButton.disabled = !selectedWeapon;
 startButton.textContent = selectedWeapon ? 'Запуск' : 'Выбери оружие';
