@@ -203,8 +203,20 @@
   const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
   // Weapons
-  const weaponIcon = (color, glyph) =>
-    `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><rect width='72' height='72' rx='10' ry='10' fill='rgba(0,0,0,0.7)'/><rect x='3' y='3' width='66' height='66' fill='none' stroke='${color}' stroke-width='3'/><text x='36' y='44' font-size='34' font-family='Courier New' font-weight='700' fill='${color}' text-anchor='middle'>${glyph}</text></svg>`)});
+    const weaponIcon = (color, glyph) =>
+      'data:image/svg+xml;utf8,' +
+      encodeURIComponent(
+        "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'>" +
+          "<rect width='72' height='72' rx='10' ry='10' fill='rgba(0,0,0,0.7)'/>" +
+          "<rect x='3' y='3' width='66' height='66' fill='none' stroke='" +
+          color +
+          "' stroke-width='3'/>" +
+          "<text x='36' y='44' font-size='34' font-family='Courier New' font-weight='700' fill='" +
+          color +
+          "' text-anchor='middle'>" +
+          glyph +
+          '</text></svg>'
+      );
 
   const WEAPON_DEFS = [
     {
@@ -867,8 +879,17 @@
       options.forEach((opt) => {
         const card = document.createElement('div');
         card.className = 'upgrade-card';
-        card.innerHTML = `<strong>${opt.title}</strong><div style="margin-top:6px; font-size:13px;">${opt.description}</div>`;
-        card.addEventListener('click', () => { opt.apply(this.entities.player, this); this.upgradePanel.style.display = 'none'; this.resume(); });
+        card.innerHTML =
+          '<strong>' +
+          opt.title +
+          '</strong><div style="margin-top:6px; font-size:13px;">' +
+          opt.description +
+          '</div>';
+        card.addEventListener('click', () => {
+          opt.apply(this.entities.player, this);
+          this.upgradePanel.style.display = 'none';
+          this.resume();
+        });
         this.upgradePanel.appendChild(card);
       });
     }
@@ -880,8 +901,19 @@
     }
     updateHud() {
       const { player } = this.entities;
-      this.statsEl.textContent = `HP: ${player.health.toFixed(0)}/${player.maxHealth} | Урон: ${player.stats.damage.toFixed(1)} | Скорость: ${player.stats.speed.toFixed(0)} | Орбиты: ${player.orbitals.length}`;
-      this.timerEl.textContent = `Время: ${Math.floor(this.elapsed)}с | EXP: ${player.experience.toFixed(0)}/${player.experienceToLevel}`;
+      this.statsEl.textContent =
+        'HP: ' +
+        player.health.toFixed(0) +
+        '/' +
+        player.maxHealth +
+        ' | Урон: ' +
+        player.stats.damage.toFixed(1) +
+        ' | Скорость: ' +
+        player.stats.speed.toFixed(0) +
+        ' | Орбиты: ' +
+        player.orbitals.length;
+      this.timerEl.textContent =
+        'Время: ' + Math.floor(this.elapsed) + 'с | EXP: ' + player.experience.toFixed(0) + '/' + player.experienceToLevel;
       if (this.weaponBadge) {
         const { name, icon, id } = this.weaponDef || {};
         this.weaponBadge.querySelector('.weapon-name').textContent = name || 'Оружие';
@@ -894,12 +926,12 @@
       if (!this.bossBar) return;
       const fill = this.bossBar.querySelector('.fill');
       const label = this.bossBar.querySelector('.label');
-      if (this.activeBoss && this.activeBoss.isAlive) {
-        const ratio = this.activeBoss.health / this.activeBoss.maxHealth;
-        fill.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
-        label.textContent = 'Повелитель костей';
-        this.bossBar.style.opacity = 1;
-      } else {
+        if (this.activeBoss && this.activeBoss.isAlive) {
+          const ratio = this.activeBoss.health / this.activeBoss.maxHealth;
+          fill.style.width = String(Math.max(0, Math.min(1, ratio)) * 100) + '%';
+          label.textContent = 'Повелитель костей';
+          this.bossBar.style.opacity = 1;
+        } else {
         this.bossBar.style.opacity = 0;
         fill.style.width = '0%';
         label.textContent = '';
@@ -929,10 +961,11 @@
   let selectedWeapon = null;
   const weaponCardRefs = [];
 
-  const updateWeaponHint = () => {
-    const weaponName = WEAPON_DEFS.find((w) => w.id === selectedWeapon)?.name;
-    weaponHint.textContent = weaponName ? `Выбрано: ${weaponName}` : 'Выбери стартовое оружие';
-  };
+    const updateWeaponHint = () => {
+      const weapon = WEAPON_DEFS.find((w) => w.id === selectedWeapon);
+      const weaponName = weapon ? weapon.name : null;
+      weaponHint.textContent = weaponName ? 'Выбрано: ' + weaponName : 'Выбери стартовое оружие';
+    };
 
   function selectWeapon(weaponId, card) {
     selectedWeapon = weaponId;
@@ -947,25 +980,34 @@
     }
   }
 
-  function renderWeaponChoices() {
-    if (!weaponChoices) return;
-    weaponCardRefs.length = 0;
-    weaponChoices.innerHTML = '';
-    WEAPON_DEFS.forEach((weapon, index) => {
-      const card = document.createElement('button');
-      card.className = 'weapon-card';
-      card.innerHTML = `
-        <div class="weapon-hotkey">${index + 1}</div>
-        <img src="${weapon.icon}" alt="${weapon.id}" />
-        <div class="weapon-title">${weapon.name}</div>
-        <div class="weapon-desc">${weapon.description}</div>
-      `;
-      const select = () => selectWeapon(weapon.id, card);
-      card.addEventListener('click', select);
-      weaponChoices.appendChild(card);
-      weaponCardRefs.push({ id: weapon.id, card });
-    });
-  }
+    function renderWeaponChoices() {
+      if (!weaponChoices) return;
+      weaponCardRefs.length = 0;
+      weaponChoices.innerHTML = '';
+      WEAPON_DEFS.forEach((weapon, index) => {
+        const card = document.createElement('button');
+        card.className = 'weapon-card';
+        card.innerHTML =
+          '<div class="weapon-hotkey">' +
+          (index + 1) +
+          '</div>' +
+          '<img src="' +
+          weapon.icon +
+          '" alt="' +
+          weapon.id +
+          '" />' +
+          '<div class="weapon-title">' +
+          weapon.name +
+          '</div>' +
+          '<div class="weapon-desc">' +
+          weapon.description +
+          '</div>';
+        const select = () => selectWeapon(weapon.id, card);
+        card.addEventListener('click', select);
+        weaponChoices.appendChild(card);
+        weaponCardRefs.push({ id: weapon.id, card });
+      });
+    }
 
   function showStart(message = '') {
     isBooting = false;
@@ -979,7 +1021,7 @@
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-    return `${mins}:${secs}`;
+    return String(mins) + ':' + secs;
   };
 
   function attachStartListeners() {
@@ -997,7 +1039,19 @@
         startButton.textContent = 'Запуск';
         hideStart();
         if (game) game.destroy();
-        game = new Game({ container, statsEl, timerEl, upgradePanel, assets: readyAssets, weaponId: selectedWeapon, weaponBadge, bossBar, onGameOver: ({ timeSurvived, kills }) => { showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`); } });
+        game = new Game({
+          container,
+          statsEl,
+          timerEl,
+          upgradePanel,
+          assets: readyAssets,
+          weaponId: selectedWeapon,
+          weaponBadge,
+          bossBar,
+          onGameOver: ({ timeSurvived, kills }) => {
+            showStart('Пробег: ' + formatTime(timeSurvived) + ' • Врагов уничтожено: ' + kills);
+          },
+        });
         game.start();
       } catch (err) {
         console.error('Не удалось инициализировать игру', err);
