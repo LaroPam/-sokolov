@@ -1,36 +1,161 @@
-const INLINE_PLAYER_SPRITES = {
-  playerIdle:
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKoAAAEECAYAAAC4F6+oAAADqElEQVR42u3dsU3DUBiF0UzhgoICeoQoGSBDMEmGYCGa1B6CXUB0EUoky3qO//ve+aTbUsRHjvQUm8NBkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiSpSS/vrz8+BZVHejmfiCKgQqs4qNAqDiqwioIKreKgQqs4qMAqCiq0ioMKreKgAqsoqNAqDiq0ioMKrGKQQqtIqNAKVIEKqnaBOk1TiblioIIqUEEVqAIVVIEKqnqF6pgKVFAFKqjaHCmoAhVU9QoVVlBBFaigClSBWhEqrKCCKlBBFagCFVSBuhIqrKCCqjykoApUUDUCVFhBBVWggipQBSqoAnUlVFhB9UpKgQqqQBWosApUUNUzUlBBBVWggqrhoMIKKqgCFXKBCiqooApUUAUlqKCCKlBBBdVAhRRUgQoqqKAKVFAFKqiggipQQRWooIIKqkAFFVQDFVRQBSqooIIqUEEVpKCCCqpABVWgggoqqAIVVFANVFAv93GsORpABVWgggoqqAIVVIEKKqigClRQVeWwH1SBCiqooApUUAUqqKCCKlBBFaigggqqQAUVVFAFanmonpECFVSBCiqooGpMpKAK1AZQYQUVVIEKKqigCtSKUGEFFVSBCiqooGo8qA9PjyUHKqhxUGEFFVSBCiqooApUUFUKacrxFKyggipQQQUVVIFaFSqsoIIqUEEFFVSBCqpABRXUnqHCCiqoAnVvqF/nGXBQQQV1MKin+fvqWnz1wwoqqKCC+h8qrKCCKlArQIU1FGq1Z6VuQZ1Pn1cHKqjdQoUVVFBhBbUlVFhBBRVUUFtChTUIasrxFKigDg0VVlBBBRXUllBhbQj1+Pa8yUAFtSnWUaH+Aao4UEEFFVRQQQUVVFBBBRVUUEEFFVRQQQW1HlZQQR0a6totuZhr/i6onUFdCwFUUN1RQQV1FKi3dutHKfd4FaUfrIAKKqhjQYUVVFBBXY4V1H2hwgrqoi15CgJUUEGFtQbUqu/yBzUcaus7Vg9QYXVHBRVUUNOgClRQ07FuBTT5H6OBCmosVFhBBVWgggoqqAIVVFBBBRXUnqHCWuDgf5Q3T4MKKqgCFVRQQQUVVFAF6g5QYQUVVIEKKqygClRQQQUVVlBBFaigggoqqKCCKlBBhRVUWEEFVaCCCiqoFIEKqkAFFdShoMIKKqi6L1ZQBSqooIIKKqgdQYUVVFAFKqiggipQQdUmVYXqyghUgQqqQBWooApUUAUqQAVVoIIqUDfrFyokpsG8xPp4AAAAAElFTkSuQmCC',
-  playerWalk1:
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKoAAAEECAYAAAC4F6+oAAADsElEQVR42u3dsU3DQBSA4UzhgoICeoQoGSBDMEmGYCGa1B6CXUB0EYoly7qz37v3/dJrU9ifbOlsX04nSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZKkJr28v/44CgqP9HYcEaWACq3SQYVW6aACq1RQoVU6qNAqHVRglQoqtEoHFVqlgwqsUkGFVumgQqt0UIFVGqTQKiVUaAWqQAVVh0CdpinEOGOggipQQRWoAhVUgQqqRoVqmQpUUAUqqOqOFFSBCqpGhQorqKAKVFAFqkCNCBVWUEEVqKAKVIEKqkDdCBVWUEFVPqSgClRQVQEqrKCCKlBBFagCFVSBuhEqrKDaklKggipQBSqsAhVUjYwUVFBBFaigqhxUWEEFVaBCLlBBBRVUgQqqoAQVVFAFKqigGlAhBVWgggoqqAIVVIEKKqigClRQBSqooIIqUEEF1YAKKqgCFVRQQRWooApSUEEFVaCCKlBBBRVUgQoqqAZUUG/n4xxzaAAVVIEKKqigClRQBSqooIIqUEFVlMV+UAUqqKCCKlBBFaigggqqQAVVoIIKKqgCFVRQQRWo4aH6RgpUUAUqqKCCqppIQRWoDaDCCiqoAhVUUEEVqBGhwgoqqAIVVFBBVT2oD0+PIQdUUNNBhRVUUAUqqKCCKlBBVSikWZanYAUVVIEKKqigCtSoUGEFFVSBCiqooApUUAUqqKCODBVWUEEVqEdD/brOgIMKKqjFoF7m77vT4tYPK6igggrqf6iwggqqQI0AFdakUKN9K7UEdb583h1QQR0WKqygggorqC2hwgoqqKCC2hIqrImgZlmeAhXU0lBhBRVUUEFtCRXWhlDPb89dBlRQm2KtCvUPUMQBFVRQQQUVVFBBBRVUUEEFFVRQQQUVVFDjYQUV1NJQt86ak7nld0EdDOpWCKCC6ooKKqhVoC7N0kspe2xF6YUVUEEFtRZUWEEFFdT1WEE9FiqsoK6aNV9BgAoqqLDGgNrqESiooHZ9MjUCVFhdUUEFFdRsUAUqqNmx9gLaeseUozcmpgfUFFBhBRVUjQN1z/9EBRVUUAUqqKCCCiqoWaDCGmDhv8rO06CCCqpABRVUUEEFFVSBetAjWYpABVWgggorqAIVVFBBhRVUUAUqqKCCCiqooApUUGEFFVZQQRWooIIKqkAFVaCCCmoZqLCCCqr2xQqqQAUVVFBBBXUgqLCCCqpABRVUUAUqqOpSVKjOjEAVqKAKVIEKqkAFVaAKVFAFKqgCtVu/mv6difHPxZoAAAAASUVORK5CYII=',
-  playerWalk2:
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKoAAAEECAYAAAC4F6+oAAADsElEQVR42u3dv2nDQBjGYU/hIkWKpA8hkSFGhMiRN/kFUFEshchbqm0cZOG1BBlQHxAMtJooYCV5zKP6e/3nu+kzXiflpBgn2kZxw6SZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZLUtN79908rg8JDeA0hQYVVoEKKqjkqoMKqUEEVVMdAhRVWkAFFVScUVGBVBSio4qqACqigipgqAoqqQBWooMqY6BSioooEqaolhLUVVIEKKqjipgBooIIqYKoKKqkAFFRQQVUwVSnRVgwqsgoQVVXBVgQopqOiqgAqqqAKmCoCiqpAhRUVFVBhVQcVUlUEFVEgQqqoIqY6CCiqgClgwqqqKqqqAKmCoCiqpABRVUUFVMFUp1VYIKraR6lqoMJqQAUVVHBVQQVUUAUVUEEVNFVOUh1VMJSUUUFFVJBBS2lFBRVQQVUwVQVUUAFVUAUV1FRjTBqVUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRXUaLXVYQQVUUFVMFUFVFAAUVEEFVRUVNMJpVQQUVEEVVFBRVWeUVFFBVTAUUVUEFVUAUV1ExjTJqUUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRzU7njBKKqgigippCKqqMKqqKAKqAqKoCgqqoIKqaAqqoAKqaCKmuqHKjBJqqiCiimpoAqqqACqmgKqqgAqpsIKqbB6lqoMJqQAUVVHBVQQVUUAUVUEEVNFVOUh1VMJSUUUFFVJBBS2lFBRVQQVUwVQVUUAFVUAUV1FRjTBqVUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRXUaLXVYQQVUUFVMFUFVFAAUVEEFVRUVNMJpVQQUVEEVVFBRVWeUVFFBVTAUUVUEFVUAUV1ExjTJqUUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRzU7njBKKqgigippCKqqMKqqKAKqAqKoCgqqoIKqaAqqoAKqaCKmuqHKjBJqqiCiimpoAqqqACqmgeclSxks3M5/ZNz6GHBJrk1rzI5KfF25AAAABJRU5ErkJggg=='
+const COLOR_PALETTE = {
+  playerIdle: '#d9ecde',
+  playerWalk: '#c0e4cf',
+  playerAttack: '#f5d36c',
+  playerHurt: '#f26b6b',
+  undead: '#7ebf86',
+  vampire: '#c97ba3',
+  skeleton: '#b7c7d3',
+  boss: '#e0ad6b',
+  projectileSword: '#f2c94c',
+  projectileKnife: '#d97757',
+  projectileBolt: '#9ac3ff',
+  projectileArrow: '#b8d08c',
+  projectileOrb: '#9ce0d9',
+  orbital: '#82f0c8',
+  background: '#0f1514',
 };
 
-const SPRITE_SOURCES = {
-  ...INLINE_PLAYER_SPRITES,
-  playerAttack: './assets/player_attack.svg',
-  playerHurt: './assets/player_hurt.svg',
-  enemyUndead1: './assets/enemy_undead_1.svg',
-  enemyUndead2: './assets/enemy_undead_2.svg',
-  enemyVampire1: './assets/enemy_vampire_1.svg',
-  enemyVampire2: './assets/enemy_vampire_2.svg',
-  enemySkeleton1: './assets/enemy_skeleton_1.svg',
-  enemySkeleton2: './assets/enemy_skeleton_2.svg',
-  enemyBoss1: './assets/enemy_boss_1.svg',
-  enemyBoss2: './assets/enemy_boss_2.svg',
-  projectileSword: './assets/projectile_sword.svg',
-  projectileKnife: './assets/projectile_knife.svg',
-  projectileBolt: './assets/projectile_bolt.svg',
-  projectileArrow: './assets/projectile_arrow.svg',
-  projectileOrb: './assets/projectile_orb.svg',
-  orbitalCore: './assets/orbital_core.svg',
-  weaponSwordIcon: './assets/weapon_sword_icon.svg',
-  weaponKnifeIcon: './assets/weapon_knife_icon.svg',
-  weaponCrossbowIcon: './assets/weapon_crossbow_icon.svg',
-  weaponBowIcon: './assets/weapon_bow_icon.svg',
-  backgroundTile: './assets/background_tile.svg',
-};
+function makeImage(draw, size = 72) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  draw(ctx, size);
+  const img = new Image();
+  img.src = canvas.toDataURL('image/png');
+  return img;
+}
+
+function circle(ctx, size, color, radiusFactor = 0.35) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size * radiusFactor, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function makeSprites() {
+  const sprites = {};
+  sprites.playerIdle = makeImage((ctx, s) => {
+    circle(ctx, s, COLOR_PALETTE.playerIdle, 0.32);
+    ctx.fillStyle = '#132a2b';
+    ctx.fillRect(s / 2 - 6, s / 2 - 4, 4, 8);
+    ctx.fillRect(s / 2 + 2, s / 2 - 4, 4, 8);
+  });
+  sprites.playerWalk1 = makeImage((ctx, s) => {
+    circle(ctx, s, COLOR_PALETTE.playerWalk, 0.32);
+    ctx.fillStyle = '#132a2b';
+    ctx.fillRect(s / 2 - 8, s / 2 - 2, 5, 10);
+    ctx.fillRect(s / 2 + 4, s / 2 - 6, 5, 14);
+  });
+  sprites.playerWalk2 = makeImage((ctx, s) => {
+    circle(ctx, s, COLOR_PALETTE.playerWalk, 0.32);
+    ctx.fillStyle = '#132a2b';
+    ctx.fillRect(s / 2 - 6, s / 2 - 6, 5, 14);
+    ctx.fillRect(s / 2 + 2, s / 2 - 2, 5, 10);
+  });
+  sprites.playerAttack = makeImage((ctx, s) => {
+    circle(ctx, s, COLOR_PALETTE.playerAttack, 0.34);
+    ctx.strokeStyle = '#ffe69c';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(s / 2, s / 2, s * 0.34, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+  });
+  sprites.playerHurt = makeImage((ctx, s) => {
+    circle(ctx, s, COLOR_PALETTE.playerHurt, 0.34);
+    ctx.strokeStyle = '#ffd7d7';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(s / 2, s / 2, s * 0.24, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  const makeEnemy = (color) =>
+    makeImage((ctx, s) => {
+      circle(ctx, s, color, 0.3);
+      ctx.fillStyle = '#0c0f10';
+      ctx.fillRect(s / 2 - 6, s / 2 - 10, 4, 8);
+      ctx.fillRect(s / 2 + 2, s / 2 - 10, 4, 8);
+    });
+
+  sprites.enemyUndead1 = makeEnemy(COLOR_PALETTE.undead);
+  sprites.enemyUndead2 = makeEnemy('#6ea976');
+  sprites.enemyVampire1 = makeEnemy(COLOR_PALETTE.vampire);
+  sprites.enemyVampire2 = makeEnemy('#a45c84');
+  sprites.enemySkeleton1 = makeEnemy(COLOR_PALETTE.skeleton);
+  sprites.enemySkeleton2 = makeEnemy('#dfe8f0');
+  sprites.enemyBoss1 = makeEnemy(COLOR_PALETTE.boss);
+  sprites.enemyBoss2 = makeEnemy('#d19152');
+
+  const projectile = (color, widthFactor = 0.26, heightFactor = 0.08) =>
+    makeImage((ctx, s) => {
+      ctx.save();
+      ctx.translate(s / 2, s / 2);
+      ctx.rotate(-Math.PI / 6);
+      ctx.fillStyle = color;
+      ctx.fillRect((-s * widthFactor) / 2, (-s * heightFactor) / 2, s * widthFactor, s * heightFactor);
+      ctx.restore();
+    }, 56);
+
+  sprites.projectileSword = projectile(COLOR_PALETTE.projectileSword, 0.55, 0.16);
+  sprites.projectileKnife = projectile(COLOR_PALETTE.projectileKnife, 0.36, 0.12);
+  sprites.projectileBolt = projectile(COLOR_PALETTE.projectileBolt, 0.5, 0.14);
+  sprites.projectileArrow = projectile(COLOR_PALETTE.projectileArrow, 0.42, 0.12);
+  sprites.projectileOrb = makeImage((ctx, s) => {
+    circle(ctx, s, COLOR_PALETTE.projectileOrb, 0.22);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(s / 2, s / 2, s * 0.18, Math.PI / 4, Math.PI);
+    ctx.stroke();
+  }, 56);
+
+  sprites.orbitalCore = makeImage((ctx, s) => {
+    circle(ctx, s, COLOR_PALETTE.orbital, 0.18);
+    ctx.strokeStyle = '#dfffee';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(s / 2 - 8, s / 2 - 8, 16, 16);
+  }, 48);
+
+  sprites.backgroundTile = makeImage((ctx, s) => {
+    ctx.fillStyle = COLOR_PALETTE.background;
+    ctx.fillRect(0, 0, s, s);
+    ctx.strokeStyle = '#0f2623';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, s - 2, s - 2);
+    ctx.strokeStyle = '#1e3d34';
+    ctx.beginPath();
+    ctx.moveTo(0, s / 2);
+    ctx.lineTo(s, s / 2);
+    ctx.moveTo(s / 2, 0);
+    ctx.lineTo(s / 2, s);
+    ctx.stroke();
+  }, 96);
+
+  const icon = (color, glyph) =>
+    makeImage((ctx, s) => {
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.fillRect(0, 0, s, s);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(3, 3, s - 6, s - 6);
+      ctx.fillStyle = color;
+      ctx.font = 'bold 34px "Courier New", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(glyph, s / 2, s / 2 + 2);
+    }, 72).src;
+
+  const iconSources = {
+    sword: icon('#f2c94c', 'S'),
+    knife: icon('#d97757', 'K'),
+    crossbow: icon('#9ac3ff', 'X'),
+    bow: icon('#b8d08c', 'B'),
+  };
+
+  return { sprites, iconSources };
+}
 
 const SPRITE_SETS = {
   player: {
@@ -55,39 +180,23 @@ const SPRITE_SETS = {
   orbitals: {
     default: 'orbitalCore',
   },
-  icons: {
-    sword: 'weaponSwordIcon',
-    knife: 'weaponKnifeIcon',
-    crossbow: 'weaponCrossbowIcon',
-    bow: 'weaponBowIcon',
-  },
+  icons: {},
   background: 'backgroundTile',
 };
 
-async function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-
 async function loadAssets() {
-  const entries = Object.entries(SPRITE_SOURCES);
+  const { sprites, iconSources } = makeSprites();
   const cache = {};
-  await Promise.all(
-    entries.map(([key, src]) =>
-      loadImage(src)
-        .then((img) => {
-          cache[key] = img;
-        })
-        .catch((err) => {
-          console.error('Не удалось загрузить ассет', key, err);
-        }),
-    ),
-  );
+  Object.entries(sprites).forEach(([key, img]) => {
+    cache[key] = img;
+  });
+  SPRITE_SETS.icons = {
+    sword: iconSources.sword,
+    knife: iconSources.knife,
+    crossbow: iconSources.crossbow,
+    bow: iconSources.bow,
+  };
   return { images: cache, sets: SPRITE_SETS };
 }
 
-export { SPRITE_SOURCES, SPRITE_SETS, loadAssets };
+export { SPRITE_SETS, loadAssets };

@@ -1,9 +1,12 @@
+const weaponIcon = (color, glyph) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><rect width='72' height='72' rx='10' ry='10' fill='rgba(0,0,0,0.7)'/><rect x='3' y='3' width='66' height='66' fill='none' stroke='${color}' stroke-width='3'/><text x='36' y='44' font-size='34' font-family='Courier New' font-weight='700' fill='${color}' text-anchor='middle'>${glyph}</text></svg>`)});
+
 const WEAPON_DEFS = [
   {
     id: 'sword',
     name: 'Клинок стража',
     description: 'Ближний sweeping удар. Высокий урон, но нужно подойти к врагам.',
-    icon: './assets/weapon_sword_icon.svg',
+    icon: weaponIcon('#f2c94c', 'S'),
     stats: {
       damage: 26,
       attackCooldown: 0.95,
@@ -56,7 +59,7 @@ const WEAPON_DEFS = [
     id: 'knife',
     name: 'Метательные клинки',
     description: 'Быстрые ножи вылетают один за другим, пробивая щели в орде.',
-    icon: './assets/weapon_knife_icon.svg',
+    icon: weaponIcon('#d97757', 'K'),
     stats: {
       damage: 12,
       attackCooldown: 0.55,
@@ -108,7 +111,7 @@ const WEAPON_DEFS = [
     id: 'crossbow',
     name: 'Арбалетный болт',
     description: 'Медленный, но тяжелый выстрел, проходящий насквозь.',
-    icon: './assets/weapon_crossbow_icon.svg',
+    icon: weaponIcon('#9ac3ff', 'X'),
     stats: {
       damage: 34,
       attackCooldown: 1.25,
@@ -160,7 +163,7 @@ const WEAPON_DEFS = [
     id: 'bow',
     name: 'Лучные залпы',
     description: 'Несколько медленных стрел летят дугой, расчищая коридор.',
-    icon: './assets/weapon_bow_icon.svg',
+    icon: weaponIcon('#b8d08c', 'B'),
     stats: {
       damage: 11,
       attackCooldown: 1.05,

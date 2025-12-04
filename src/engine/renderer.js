@@ -8,6 +8,7 @@ class Renderer {
     this.canvas.style.inset = '0';
     this.canvas.style.width = '100%';
     this.canvas.style.height = '100%';
+    this.canvas.style.zIndex = '1';
     this.container.appendChild(this.canvas);
     this.camera = { x: 0, y: 0 };
     this.bgNoise = this.createNoisePattern();
