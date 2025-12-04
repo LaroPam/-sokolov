@@ -27,6 +27,15 @@ function makeImage(draw, size = 72) {
   return img;
 }
 
+function ensureImageLoaded(img) {
+  return new Promise((resolve) => {
+    if (!img) return resolve();
+    if (img.complete) return resolve();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+  });
+}
+
 function circle(ctx, size, color, radiusFactor = 0.35) {
   ctx.fillStyle = color;
   ctx.beginPath();
@@ -196,6 +205,7 @@ async function loadAssets() {
     crossbow: iconSources.crossbow,
     bow: iconSources.bow,
   };
+  await Promise.all(Object.values(cache).map((img) => ensureImageLoaded(img)));
   return { images: cache, sets: SPRITE_SETS };
 }
 

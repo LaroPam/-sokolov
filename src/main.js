@@ -22,7 +22,7 @@ let selectedWeapon = null;
 function renderWeaponChoices() {
   if (!weaponChoices) return;
   weaponChoices.innerHTML = '';
-  WEAPON_DEFS.forEach((weapon) => {
+  WEAPON_DEFS.forEach((weapon, index) => {
     const card = document.createElement('button');
     card.className = 'weapon-card';
     card.innerHTML = `
@@ -30,14 +30,18 @@ function renderWeaponChoices() {
       <div class="weapon-title">${weapon.name}</div>
       <div class="weapon-desc">${weapon.description}</div>
     `;
-    card.addEventListener('click', () => {
+    const select = () => {
       selectedWeapon = weapon.id;
       weaponHint.textContent = `Выбрано: ${weapon.name}`;
       weaponChoices.querySelectorAll('.weapon-card').forEach((el) => el.classList.remove('selected'));
       card.classList.add('selected');
       if (!isBooting) startButton.disabled = false;
-    });
+    };
+    card.addEventListener('click', select);
     weaponChoices.appendChild(card);
+    if (index === 0 && !selectedWeapon) {
+      select();
+    }
   });
 }
 
@@ -60,7 +64,7 @@ function formatTime(seconds) {
 }
 
 function attachStartListeners() {
-  const handler = () => {
+  const handler = async () => {
     if (isBooting || startScreen.style.display === 'none') return;
     if (!selectedWeapon) {
       runSummary.textContent = 'Выбери оружие, чтобы начать';
@@ -71,35 +75,41 @@ function attachStartListeners() {
     if (!assetsPromise) {
       assetsPromise = loadAssets();
     }
-    startButton.textContent = 'Загрузка ассетов...';
-    hideStart();
+    runSummary.textContent = 'Загружаю ассеты...';
+    startButton.textContent = 'Загрузка...';
 
-    assetsPromise
-      .then((assets) => {
-        startButton.textContent = 'Запуск';
-        if (game) {
-          game.destroy();
-        }
+    try {
+      const assets = await assetsPromise;
+      startButton.textContent = 'Запуск';
+      hideStart();
 
-        game = new Game({
-          container,
-          statsEl,
-          timerEl,
-          upgradePanel,
-          assets,
-          weaponId: selectedWeapon,
-          weaponBadge,
-          bossBar,
-          onGameOver: ({ timeSurvived, kills }) => {
-            showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`);
-          },
-        });
+      if (game) {
+        game.destroy();
+      }
 
-        game.start();
-      })
-      .catch(() => {
-        showStart('Не удалось загрузить ассеты');
+      game = new Game({
+        container,
+        statsEl,
+        timerEl,
+        upgradePanel,
+        assets,
+        weaponId: selectedWeapon,
+        weaponBadge,
+        bossBar,
+        onGameOver: ({ timeSurvived, kills }) => {
+          showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`);
+        },
       });
+
+      game.start();
+    } catch (err) {
+      console.error('Не удалось инициализировать игру', err);
+      runSummary.textContent = 'Не удалось загрузить ассеты';
+      startButton.textContent = 'Запуск';
+      startButton.disabled = false;
+    } finally {
+      isBooting = false;
+    }
   };
 
   startButton.addEventListener('click', handler);
@@ -112,4 +122,4 @@ function attachStartListeners() {
 
 attachStartListeners();
 renderWeaponChoices();
-startButton.disabled = true;
+startButton.disabled = !selectedWeapon;

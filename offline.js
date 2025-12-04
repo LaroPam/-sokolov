@@ -29,6 +29,14 @@
     return img;
   };
 
+  const ensureImageLoaded = (img) =>
+    new Promise((resolve) => {
+      if (!img) return resolve();
+      if (img.complete) return resolve();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+    });
+
   const circle = (ctx, size, color, radiusFactor = 0.35) => {
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -173,15 +181,16 @@
     background: 'backgroundTile',
   };
 
-  async function loadAssets() {
-    const { sprites, iconSources } = makeSprites();
-    const cache = {};
-    Object.entries(sprites).forEach(([key, img]) => {
-      cache[key] = img;
-    });
-    SPRITE_SETS.icons = { sword: iconSources.sword, knife: iconSources.knife, crossbow: iconSources.crossbow, bow: iconSources.bow };
-    return { images: cache, sets: SPRITE_SETS };
-  }
+    async function loadAssets() {
+      const { sprites, iconSources } = makeSprites();
+      const cache = {};
+      Object.entries(sprites).forEach(([key, img]) => {
+        cache[key] = img;
+      });
+      SPRITE_SETS.icons = { sword: iconSources.sword, knife: iconSources.knife, crossbow: iconSources.crossbow, bow: iconSources.bow };
+      await Promise.all(Object.values(cache).map((img) => ensureImageLoaded(img)));
+      return { images: cache, sets: SPRITE_SETS };
+    }
 
   // Utils
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -919,7 +928,7 @@
   function renderWeaponChoices() {
     if (!weaponChoices) return;
     weaponChoices.innerHTML = '';
-    WEAPON_DEFS.forEach((weapon) => {
+    WEAPON_DEFS.forEach((weapon, index) => {
       const card = document.createElement('button');
       card.className = 'weapon-card';
       card.innerHTML = `
@@ -927,14 +936,16 @@
         <div class="weapon-title">${weapon.name}</div>
         <div class="weapon-desc">${weapon.description}</div>
       `;
-      card.addEventListener('click', () => {
+      const select = () => {
         selectedWeapon = weapon.id;
         weaponHint.textContent = `Выбрано: ${weapon.name}`;
         weaponChoices.querySelectorAll('.weapon-card').forEach((el) => el.classList.remove('selected'));
         card.classList.add('selected');
         if (!isBooting) startButton.disabled = false;
-      });
+      };
+      card.addEventListener('click', select);
       weaponChoices.appendChild(card);
+      if (index === 0 && !selectedWeapon) select();
     });
   }
 
@@ -953,22 +964,29 @@
   };
 
   function attachStartListeners() {
-    const handler = () => {
+    const handler = async () => {
       if (isBooting || startScreen.style.display === 'none') return;
       if (!selectedWeapon) { runSummary.textContent = 'Выбери оружие, чтобы начать'; return; }
       isBooting = true;
       startButton.disabled = true;
       if (!assetsPromise) assetsPromise = loadAssets();
-      startButton.textContent = 'Загрузка ассетов...';
-      hideStart();
-      assetsPromise
-        .then((assets) => {
-          startButton.textContent = 'Запуск';
-          if (game) game.destroy();
-          game = new Game({ container, statsEl, timerEl, upgradePanel, assets, weaponId: selectedWeapon, weaponBadge, bossBar, onGameOver: ({ timeSurvived, kills }) => { showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`); } });
-          game.start();
-        })
-        .catch(() => { showStart('Не удалось загрузить ассеты'); });
+      runSummary.textContent = 'Загружаю ассеты...';
+      startButton.textContent = 'Загрузка...';
+      try {
+        const assets = await assetsPromise;
+        startButton.textContent = 'Запуск';
+        hideStart();
+        if (game) game.destroy();
+        game = new Game({ container, statsEl, timerEl, upgradePanel, assets, weaponId: selectedWeapon, weaponBadge, bossBar, onGameOver: ({ timeSurvived, kills }) => { showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`); } });
+        game.start();
+      } catch (err) {
+        console.error('Не удалось инициализировать игру', err);
+        runSummary.textContent = 'Не удалось загрузить ассеты';
+        startButton.textContent = 'Запуск';
+        startButton.disabled = false;
+      } finally {
+        isBooting = false;
+      }
     };
     startButton.addEventListener('click', handler);
     window.addEventListener('keydown', (e) => { if (e.code === 'Enter' || e.code === 'Space') handler(); });
@@ -976,5 +994,5 @@
 
   attachStartListeners();
   renderWeaponChoices();
-  startButton.disabled = true;
+  startButton.disabled = !selectedWeapon;
 })();
