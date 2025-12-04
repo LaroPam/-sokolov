@@ -48,7 +48,7 @@ class Renderer {
     return this.ctx.createPattern(off, 'repeat');
   }
 
-  clear(center, time) {
+  clear(center) {
     this.camera.x = center.x;
     this.camera.y = center.y;
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -60,8 +60,8 @@ class Renderer {
     this.ctx.fillStyle = this.bgNoise;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.globalAlpha = 1;
-    this.ctx.fillStyle = `rgba(80,110,96,0.15)`;
-    const pulse = 6 + Math.sin(time * 0.6) * 3;
+    this.ctx.fillStyle = 'rgba(80,110,96,0.2)';
+    const pulse = 7;
     for (let x = 0; x < this.canvas.width; x += 72) {
       for (let y = 0; y < this.canvas.height; y += 72) {
         this.ctx.fillRect(x, y, pulse, 1.5);
@@ -145,10 +145,9 @@ class Renderer {
     }
     if (!this.tilePattern) return;
     this.ctx.save();
-    this.ctx.translate(this.canvas.width / 2 - (center.x % 128), this.canvas.height / 2 - (center.y % 128));
     this.ctx.fillStyle = this.tilePattern;
-    this.ctx.globalAlpha = 0.8;
-    this.ctx.fillRect(-128, -128, this.canvas.width + 256, this.canvas.height + 256);
+    this.ctx.globalAlpha = 0.82;
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.restore();
   }
 }

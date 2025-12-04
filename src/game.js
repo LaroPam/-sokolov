@@ -140,7 +140,7 @@ class Game {
 
   draw() {
     const { player, enemies, projectiles } = this.entities;
-    this.renderer.clear(player.position, this.elapsed);
+    this.renderer.clear(player.position);
     this.renderer.drawBackground(player.position);
     enemies.forEach((enemy) => this.renderer.drawEnemy(enemy, this.assets.sets));
     projectiles.forEach((proj) => this.renderer.drawProjectile(proj, this.assets.sets));

@@ -16,7 +16,9 @@ const bossBar = document.getElementById('boss-bar');
 
 let game = null;
 let isBooting = false;
-let assetsPromise = null;
+// Kick off asset generation immediately so the start button never waits on
+// late image events.
+let assetsPromise = loadAssets();
 let selectedWeapon = null;
 
 function renderWeaponChoices() {
@@ -72,14 +74,14 @@ function attachStartListeners() {
     }
     isBooting = true;
     startButton.disabled = true;
-    if (!assetsPromise) {
-      assetsPromise = loadAssets();
-    }
-    runSummary.textContent = 'Загружаю ассеты...';
+    if (!assetsPromise) assetsPromise = loadAssets();
+    runSummary.textContent = 'Готовлю мир...';
     startButton.textContent = 'Загрузка...';
 
     try {
       const assets = await assetsPromise;
+      // If loading somehow returned null, regenerate assets synchronously.
+      const readyAssets = assets || (await loadAssets());
       startButton.textContent = 'Запуск';
       hideStart();
 
@@ -92,7 +94,7 @@ function attachStartListeners() {
         statsEl,
         timerEl,
         upgradePanel,
-        assets,
+        assets: readyAssets,
         weaponId: selectedWeapon,
         weaponBadge,
         bossBar,

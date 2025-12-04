@@ -188,11 +188,9 @@
         cache[key] = img;
       });
       SPRITE_SETS.icons = { sword: iconSources.sword, knife: iconSources.knife, crossbow: iconSources.crossbow, bow: iconSources.bow };
-      const loaders = Object.values(cache).map((img) => ensureImageLoaded(img));
-      await Promise.race([
-        Promise.all(loaders),
-        new Promise((resolve) => setTimeout(resolve, 600)),
-      ]);
+      // Procedural canvases are instantly usable; return immediately so the
+      // start button is never blocked by image events that may not fire
+      // consistently in file:// contexts.
       return { images: cache, sets: SPRITE_SETS };
     }
 
@@ -319,7 +317,7 @@
       c.putImageData(imageData, 0, 0);
       return this.ctx.createPattern(off, 'repeat');
     }
-    clear(center, time) {
+    clear(center) {
       this.camera.x = center.x;
       this.camera.y = center.y;
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -331,8 +329,8 @@
       this.ctx.fillStyle = this.bgNoise;
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.globalAlpha = 1;
-      this.ctx.fillStyle = `rgba(80,110,96,0.15)`;
-      const pulse = 6 + Math.sin(time * 0.6) * 3;
+      this.ctx.fillStyle = 'rgba(80,110,96,0.2)';
+      const pulse = 7;
       for (let x = 0; x < this.canvas.width; x += 72) {
         for (let y = 0; y < this.canvas.height; y += 72) {
           this.ctx.fillRect(x, y, pulse, 1.5);
@@ -402,10 +400,9 @@
       }
       if (!this.tilePattern) return;
       this.ctx.save();
-      this.ctx.translate(this.canvas.width / 2 - (center.x % 128), this.canvas.height / 2 - (center.y % 128));
       this.ctx.fillStyle = this.tilePattern;
-      this.ctx.globalAlpha = 0.8;
-      this.ctx.fillRect(-128, -128, this.canvas.width + 256, this.canvas.height + 256);
+      this.ctx.globalAlpha = 0.82;
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.restore();
     }
   }
@@ -815,7 +812,7 @@
     }
     draw() {
       const { player, enemies, projectiles } = this.entities;
-      this.renderer.clear(player.position, this.elapsed);
+      this.renderer.clear(player.position);
       this.renderer.drawBackground(player.position);
       enemies.forEach((enemy) => this.renderer.drawEnemy(enemy, this.assets.sets));
       projectiles.forEach((proj) => this.renderer.drawProjectile(proj, this.assets.sets));
@@ -926,7 +923,9 @@
 
   let game = null;
   let isBooting = false;
-  let assetsPromise = null;
+  // Build procedural assets immediately so the start button never waits on
+  // event-driven loading in file:// contexts.
+  let assetsPromise = loadAssets();
   let selectedWeapon = null;
 
   function renderWeaponChoices() {
@@ -974,14 +973,15 @@
       isBooting = true;
       startButton.disabled = true;
       if (!assetsPromise) assetsPromise = loadAssets();
-      runSummary.textContent = 'Загружаю ассеты...';
+      runSummary.textContent = 'Готовлю мир...';
       startButton.textContent = 'Загрузка...';
       try {
         const assets = await assetsPromise;
+        const readyAssets = assets || (await loadAssets());
         startButton.textContent = 'Запуск';
         hideStart();
         if (game) game.destroy();
-        game = new Game({ container, statsEl, timerEl, upgradePanel, assets, weaponId: selectedWeapon, weaponBadge, bossBar, onGameOver: ({ timeSurvived, kills }) => { showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`); } });
+        game = new Game({ container, statsEl, timerEl, upgradePanel, assets: readyAssets, weaponId: selectedWeapon, weaponBadge, bossBar, onGameOver: ({ timeSurvived, kills }) => { showStart(`Пробег: ${formatTime(timeSurvived)} • Врагов уничтожено: ${kills}`); } });
         game.start();
       } catch (err) {
         console.error('Не удалось инициализировать игру', err);

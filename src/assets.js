@@ -205,12 +205,10 @@ async function loadAssets() {
     crossbow: iconSources.crossbow,
     bow: iconSources.bow,
   };
-  const loaders = Object.values(cache).map((img) => ensureImageLoaded(img));
-  // If an onload never fires (rare on some file:// contexts), unblock boot after a short grace.
-  await Promise.race([
-    Promise.all(loaders),
-    new Promise((resolve) => setTimeout(resolve, 600)),
-  ]);
+  // Images created from in-memory canvases are immediately ready, but some
+  // environments never fire onload for data URLs. Since we have everything
+  // procedurally available already, return synchronously so the start button
+  // can never be blocked by asset preloading.
   return { images: cache, sets: SPRITE_SETS };
 }
 
