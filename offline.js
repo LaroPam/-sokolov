@@ -926,7 +926,12 @@
   // Build procedural assets immediately so the start button never waits on
   // event-driven loading in file:// contexts.
   let assetsPromise = loadAssets();
-  let selectedWeapon = null;
+  let selectedWeapon = WEAPON_DEFS[0]?.id || null;
+
+  const updateWeaponHint = () => {
+    const weaponName = WEAPON_DEFS.find((w) => w.id === selectedWeapon)?.name;
+    weaponHint.textContent = weaponName ? `Выбрано: ${weaponName}` : 'Выбери стартовое оружие';
+  };
 
   function renderWeaponChoices() {
     if (!weaponChoices) return;
@@ -941,23 +946,27 @@
       `;
       const select = () => {
         selectedWeapon = weapon.id;
-        weaponHint.textContent = `Выбрано: ${weapon.name}`;
+        updateWeaponHint();
         weaponChoices.querySelectorAll('.weapon-card').forEach((el) => el.classList.remove('selected'));
         card.classList.add('selected');
-        if (!isBooting) startButton.disabled = false;
+        if (!isBooting) {
+          startButton.disabled = false;
+          startButton.textContent = 'Запуск';
+        }
       };
       card.addEventListener('click', select);
       weaponChoices.appendChild(card);
-      if (index === 0 && !selectedWeapon) select();
+      if (selectedWeapon === weapon.id || (index === 0 && !selectedWeapon)) select();
     });
   }
 
   function showStart(message = '') {
     isBooting = false;
     startButton.disabled = !selectedWeapon;
-    startButton.textContent = 'Запуск';
+    startButton.textContent = selectedWeapon ? 'Запуск' : 'Выбери оружие';
     startScreen.style.display = 'flex';
     runSummary.textContent = message;
+    updateWeaponHint();
   }
   function hideStart() { startScreen.style.display = 'none'; }
   const formatTime = (seconds) => {
@@ -998,5 +1007,7 @@
 
   attachStartListeners();
   renderWeaponChoices();
+  updateWeaponHint();
   startButton.disabled = !selectedWeapon;
+  startButton.textContent = selectedWeapon ? 'Запуск' : 'Выбери оружие';
 })();
