@@ -116,6 +116,7 @@
       margin-top: 6px;
     }
     .weapon-card {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -128,6 +129,17 @@
       pointer-events: auto;
       color: #d9ecde;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .weapon-hotkey {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(98, 255, 199, 0.8);
+      color: #b8ffe1;
+      padding: 2px 6px;
+      font-size: 11px;
+      letter-spacing: 1px;
     }
     .weapon-card img {
       width: 64px;
@@ -211,7 +223,7 @@
     <div id="start-screen">
       <h1>Graves of the Last Light</h1>
       <div style="font-size:13px;color:#cde8d4;">WASD или стрелки — движение. Автоатака выбирает ближайшую цель.</div>
-      <div style="font-size:13px;color:#d6f4de;">Выбери стартовое оружие в стиле ретро и нажми Enter/Space или кликни, чтобы начать.</div>
+      <div style="font-size:13px;color:#d6f4de;">Сначала выбери оружие клавишами <strong>1-4</strong> (или кликом), затем Enter/Space или кнопку ниже.</div>
       <div id="weapon-hint" style="font-size:13px;color:#cde8d4;">Оружие не выбрано</div>
       <div id="weapon-choices"></div>
       <div style="font-size:12px;color:#8fb6a4;max-width:360px;line-height:1.4;">Если экран завис, открой через локальный сервер: <code>python -m http.server 8000</code>.</div>

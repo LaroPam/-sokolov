@@ -20,6 +20,7 @@ let isBooting = false;
 // sees; build the cache only after a loadout is chosen.
 let assetsPromise = null;
 let selectedWeapon = null;
+const weaponCardRefs = [];
 
 function updateWeaponHint() {
   const weaponName = WEAPON_DEFS.find((w) => w.id === selectedWeapon)?.name;
@@ -28,29 +29,36 @@ function updateWeaponHint() {
     : 'Выбери стартовое оружие';
 }
 
+function selectWeapon(weaponId, card) {
+  selectedWeapon = weaponId;
+  updateWeaponHint();
+  weaponChoices.querySelectorAll('.weapon-card').forEach((el) => el.classList.remove('selected'));
+  if (card) card.classList.add('selected');
+  const ref = weaponCardRefs.find((refCard) => refCard.id === weaponId);
+  if (!card && ref?.card) ref.card.classList.add('selected');
+  if (!isBooting) {
+    startButton.disabled = false;
+    startButton.textContent = 'Запуск';
+  }
+}
+
 function renderWeaponChoices() {
   if (!weaponChoices) return;
+  weaponCardRefs.length = 0;
   weaponChoices.innerHTML = '';
-  WEAPON_DEFS.forEach((weapon) => {
+  WEAPON_DEFS.forEach((weapon, index) => {
     const card = document.createElement('button');
     card.className = 'weapon-card';
     card.innerHTML = `
+      <div class="weapon-hotkey">${index + 1}</div>
       <img src="${weapon.icon}" alt="${weapon.id}" />
       <div class="weapon-title">${weapon.name}</div>
       <div class="weapon-desc">${weapon.description}</div>
     `;
-    const select = () => {
-      selectedWeapon = weapon.id;
-      updateWeaponHint();
-      weaponChoices.querySelectorAll('.weapon-card').forEach((el) => el.classList.remove('selected'));
-      card.classList.add('selected');
-      if (!isBooting) {
-        startButton.disabled = false;
-        startButton.textContent = 'Запуск';
-      }
-    };
+    const select = () => selectWeapon(weapon.id, card);
     card.addEventListener('click', select);
     weaponChoices.appendChild(card);
+    weaponCardRefs.push({ id: weapon.id, card });
   });
 }
 
@@ -126,6 +134,17 @@ function attachStartListeners() {
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Enter' || e.code === 'Space') {
       handler();
+    }
+
+    if (startScreen.style.display !== 'none') {
+      const key = e.key;
+      if (key >= '1' && key <= '4') {
+        const idx = Number(key) - 1;
+        const weapon = WEAPON_DEFS[idx];
+        if (weapon) {
+          selectWeapon(weapon.id, weaponCardRefs[idx]?.card);
+        }
+      }
     }
   });
 }
