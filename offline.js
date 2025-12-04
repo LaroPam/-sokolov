@@ -188,7 +188,11 @@
         cache[key] = img;
       });
       SPRITE_SETS.icons = { sword: iconSources.sword, knife: iconSources.knife, crossbow: iconSources.crossbow, bow: iconSources.bow };
-      await Promise.all(Object.values(cache).map((img) => ensureImageLoaded(img)));
+      const loaders = Object.values(cache).map((img) => ensureImageLoaded(img));
+      await Promise.race([
+        Promise.all(loaders),
+        new Promise((resolve) => setTimeout(resolve, 600)),
+      ]);
       return { images: cache, sets: SPRITE_SETS };
     }
 

@@ -205,7 +205,12 @@ async function loadAssets() {
     crossbow: iconSources.crossbow,
     bow: iconSources.bow,
   };
-  await Promise.all(Object.values(cache).map((img) => ensureImageLoaded(img)));
+  const loaders = Object.values(cache).map((img) => ensureImageLoaded(img));
+  // If an onload never fires (rare on some file:// contexts), unblock boot after a short grace.
+  await Promise.race([
+    Promise.all(loaders),
+    new Promise((resolve) => setTimeout(resolve, 600)),
+  ]);
   return { images: cache, sets: SPRITE_SETS };
 }
 
