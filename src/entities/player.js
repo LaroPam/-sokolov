@@ -14,6 +14,7 @@ class Player {
     this.hurtTimer = 0;
     this.attackFlash = 0;
     this.walkCycle = 0;
+    this.facing = 1;
     const baseStats = {
       speed: 180,
       damage: 14,
@@ -66,6 +67,9 @@ class Player {
     const moveMag = Math.hypot(this.velocity.x, this.velocity.y);
     if (moveMag > 5) {
       this.walkCycle += dt * (moveMag / 70);
+      if (Math.abs(this.velocity.x) > 1) {
+        this.facing = Math.sign(this.velocity.x);
+      }
     }
 
     this.attackTimer = Math.max(0, this.attackTimer - dt);
@@ -83,6 +87,9 @@ class Player {
 
     const dx = target.position.x - this.position.x;
     const dy = target.position.y - this.position.y;
+    if (Math.abs(dx) > 2) {
+      this.facing = Math.sign(dx);
+    }
     const baseAngle = Math.atan2(dy, dx);
     const shots = [];
 

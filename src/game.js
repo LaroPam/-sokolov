@@ -183,6 +183,10 @@ class Game {
   }
 
   handleBossSpawn() {
+    if (this.activeBoss && !this.activeBoss.isAlive) {
+      this.activeBoss = null;
+      this.nextBossTime = this.elapsed + 300;
+    }
     if (this.activeBoss && this.activeBoss.isAlive) return;
     if (this.elapsed >= this.nextBossTime) {
       const playerPos = this.entities.player.position;
@@ -194,6 +198,7 @@ class Game {
       };
       this.activeBoss = new Enemy('graveLord', position, 1 + this.elapsed / 240);
       this.entities.enemies.push(this.activeBoss);
+      this.nextBossTime = this.elapsed + 300;
       this.updateBossBar();
     }
   }

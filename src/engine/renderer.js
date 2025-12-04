@@ -4,6 +4,10 @@ class Renderer {
     this.assets = assets;
     this.canvas = document.createElement('canvas');
     this.ctx = this.canvas.getContext('2d');
+    this.canvas.style.position = 'absolute';
+    this.canvas.style.inset = '0';
+    this.canvas.style.width = '100%';
+    this.canvas.style.height = '100%';
     this.container.appendChild(this.canvas);
     this.camera = { x: 0, y: 0 };
     this.bgNoise = this.createNoisePattern();
@@ -71,11 +75,14 @@ class Renderer {
     return { x, y };
   }
 
-  drawSprite(image, x, y, { scale = 1, alpha = 1, rotation = 0 } = {}) {
+  drawSprite(image, x, y, { scale = 1, alpha = 1, rotation = 0, flipX = false } = {}) {
     if (!image) return;
     this.ctx.save();
     this.ctx.translate(x, y);
     this.ctx.rotate(rotation);
+    if (flipX) {
+      this.ctx.scale(-1, 1);
+    }
     this.ctx.globalAlpha = alpha;
     const w = image.width * scale;
     const h = image.height * scale;
@@ -95,7 +102,7 @@ class Renderer {
     } else if (Math.abs(player.velocity.x) < 2 && Math.abs(player.velocity.y) < 2) {
       frame = this.assets.images[set.idle[0]];
     }
-    this.drawSprite(frame, x, y + bob, { scale: 1.6 });
+    this.drawSprite(frame, x, y + bob, { scale: 1.25, flipX: player.facing < 0 });
     player.orbitals.forEach((orb) => {
       const ox = x + Math.cos(orb.angle) * orb.radius;
       const oy = y + Math.sin(orb.angle) * orb.radius;

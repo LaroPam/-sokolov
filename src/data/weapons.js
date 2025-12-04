@@ -208,60 +208,6 @@ const WEAPON_DEFS = [
       },
     ],
   },
-  {
-    id: 'staff',
-    name: 'Жезл искр',
-    description: 'Медленные сферы взрываются и цепляют группу врагов.',
-    icon: './assets/weapon_staff_icon.svg',
-    stats: {
-      damage: 16,
-      attackCooldown: 1,
-      attackRadius: 340,
-      projectileSpeed: 260,
-    },
-    weapon: {
-      kind: 'ranged',
-      count: 1,
-      spread: 0.08,
-      projectile: 'orb',
-      lifespan: 2,
-      splashRadius: 80,
-      pierce: 0,
-    },
-    startingOrbitals: 1,
-    upgrades: [
-      {
-        title: 'Второй заряд',
-        description: '+1 сфера и чуть шире конус',
-        apply: (player) => {
-          player.weapon.count = Math.min(player.weapon.count + 1, 3);
-          player.weapon.spread += 0.06;
-        },
-      },
-      {
-        title: 'Вспышка некера',
-        description: '+25% к радиусу взрыва',
-        apply: (player) => {
-          player.weapon.splashRadius = Math.round((player.weapon.splashRadius || 60) * 1.25);
-        },
-      },
-      {
-        title: 'Ткань заклинателя',
-        description: '-15% к перезарядке и +1 орбитальный дух',
-        apply: (player) => {
-          player.stats.attackCooldown *= 0.85;
-          player.addOrbital({ radius: 90, speed: 2.2, damage: player.stats.damage * 0.6, sprite: 'default' });
-        },
-      },
-      {
-        title: 'Сжатая мана',
-        description: '+20% к урону сфер',
-        apply: (player) => {
-          player.stats.damage *= 1.2;
-        },
-      },
-    ],
-  },
 ];
 
 function getWeaponById(id) {

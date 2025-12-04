@@ -1,9 +1,16 @@
 (() => {
   // Assets
+  const INLINE_PLAYER_SPRITES = {
+    playerIdle:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKoAAAEECAYAAAC4F6+oAAADqElEQVR42u3dsU3DUBiF0UzhgoICeoQoGSBDMEmGYCGa1B6CXUB0EUoky3qO//ve+aTbUsRHjvQUm8NBkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiRJkiSpSS/vrz8+BZVHejmfiCKgQqs4qNAqDiqwioIKreKgQqs4qMAqCiq0ioMKreKgAqsoqNAqDiq0ioMKrGKQQqtIqNAKVIEKqnaBOk1TiblioIIqUEEVqAIVVIEKqnqF6pgKVFAFKqjaHCmoAhVU9QoVVlBBFaigClSBWhEqrKCCKlBBFagCFVSBuhIqrKCCqjykoApUUDUCVFhBBVWggipQBSqoAnUlVFhB9UpKgQqqQBWosApUUNUzUlBBBVWggqrhoMIKKqgCFXKBCiqooApUUAUlqKCCKlBBBdVAhRRUgQoqqKAKVFAFKqiggipQQRWooIIKqkAFFVQDFVRQBSqooIIqUEEVpKCCCqpABVWgggoqqAIVVFANVFAv93GsORpABVWgggoqqAIVVIEKKqigClRQVeWwH1SBCiqooApUUAUqqKCCKlBBFaigggqqQAUVVFAFanmonpECFVSBCiqooGpMpKAK1AZQYQUVVIEKKqigCtSKUGEFFVSBCiqooGo8qA9PjyUHKqhxUGEFFVSBCiqooApUUFUKacrxFKyggipQQQUVVIFaFSqsoIIqUEEFFVSBCqpABRXUnqHCCiqoAnVvqF/nGXBQQQV1MKin+fvqWnz1wwoqqKCC+h8qrKCCKlArQIU1FGq1Z6VuQZ1Pn1cHKqjdQoUVVFBhBbUlVFhBBRVUUFtChTUIasrxFKigDg0VVlBBBRXUllBhbQj1+Pa8yUAFtSnWUaH+Aao4UEEFFVRQQQUVVFBBBRVUUEEFFVRQQQW1HlZQQR0a6totuZhr/i6onUFdCwFUUN1RQQV1FKi3dutHKfd4FaUfrIAKKqhjQYUVVFBBXY4V1H2hwgrqoi15CgJUUEGFtQbUqu/yBzUcaus7Vg9QYXVHBRVUUNOgClRQ07FuBTT5H6OBCmosVFhBBVWgggoqqAIVVFBBBRXUnqHCWuDgf5Q3T4MKKqgCFVRQQQUVVFAF6g5QYQUVVIEKKqygClRQQQUVVlBBFaigggoqqKCCKlBBhRVUWEEFVaCCCiqoFIEKqkAFFdShoMIKKqi6L1ZQBSqooIIKKqgdQYUVVFAFKqiggipQQdUmVYXqyghUgQqqQBWooApUUAUqQAVVoIIqUDfrFyokpsG8xPp4AAAAAElFTkSuQmCC',
+    playerWalk1:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKoAAAEECAYAAAC4F6+oAAADsElEQVR42u3dsU3DQBSA4UzhgoICeoQoGSBDMEmGYCGa1B6CXUB0EYoly7qz37v3/dJrU9ifbOlsX04nSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZKkJr28v/44CgqP9HYcEaWACq3SQYVW6aACq1RQoVU6qNAqHVRglQoqtEoHFVqlgwqsUkGFVumgQqt0UIFVGqTQKiVUaAWqQAVVh0CdpinEOGOggipQQRWoAhVUgQqqRoVqmQpUUAUqqOqOFFSBCqpGhQorqKAKVFAFqkCNCBVWUEEVqKAKVIEKqkDdCBVWUEFVPqSgClRQVQEqrKCCKlBBFagCFVSBuhEqrKDaklKggipQBSqsAhVUjYwUVFBBFaigqhxUWEEFVaBCLlBBBRVUgQqqoAQVVFAFKqigGlAhBVWgggoqqAIVVIEKKqigClRQBSqooIIqUEEF1YAKKqgCFVRQQRWooApSUEEFVaCCKlBBBRVUgQoqqAZUUG/n4xxzaAAVVIEKKqigClRQBSqooIIqUEFVlMV+UAUqqKCCKlBBFaigggqqQAVVoIIKKqgCFVRQQRWo4aH6RgpUUAUqqKCCqppIQRWoDaDCCiqoAhVUUEEVqBGhwgoqqAIVVFBBVT2oD0+PIQdUUNNBhRVUUAUqqKCCKlBBVSikWZanYAUVVIEKKqigCtSoUGEFFVSBCiqooApUUAUqqKCODBVWUEEVqEdD/brOgIMKKqjFoF7m77vT4tYPK6igggrqf6iwggqqQI0AFdakUKN9K7UEdb583h1QQR0WKqygggorqC2hwgoqqKCC2hIqrImgZlmeAhXU0lBhBRVUUEFtCRXWhlDPb89dBlRQm2KtCvUPUMQBFVRQQQUVVFBBBRVUUEEFFVRQQQUVVFDjYQUV1NJQt86ak7nld0EdDOpWCKCC6ooKKqhVoC7N0kspe2xF6YUVUEEFtRZUWEEFFdT1WEE9FiqsoK6aNV9BgAoqqLDGgNrqESiooHZ9MjUCVFhdUUEFFdRsUAUqqNmx9gLaeseUozcmpgfUFFBhBRVUjQN1z/9EBRVUUAUqqKCCCiqoWaDCGmDhv8rO06CCCqpABRVUUEEFFVSBetAjWYpABVWgggorqAIVVFBBhRVUUAUqqKCCCiqooApUUGEFFVZQQRWooIIKqkAFVaCCCmoZqLCCCqr2xQqqQAUVVFBBBXUgqLCCCqpABRVUUAUqqOpSVKjOjEAVqKAKVIEKqkAFVaAKVFAFKqgCtVu/mv6difHPxZoAAAAASUVORK5CYII=',
+    playerWalk2:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKoAAAEECAYAAAC4F6+oAAADsElEQVR42u3dv2nDQBjGYU/hIkWKpA8hkSFGhMiRN/kFUFEshchbqm0cZOG1BBlQHxAMtJooYCV5zKP6e/3nu+kzXiflpBgn2kZxw6SZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZLUtN79908rg8JDeA0hQYVVoEKKqjkqoMKqUEEVVMdAhRVWkAFFVScUVGBVBSio4qqACqigipgqAoqqQBWooMqY6BSioooEqaolhLUVVIEKKqjipgBooIIqYKoKKqkAFFRQQVUwVSnRVgwqsgoQVVXBVgQopqOiqgAqqqAKmCoCiqpAhRUVFVBhVQcVUlUEFVEgQqqoIqY6CCiqgClgwqqqKqqqAKmCoCiqpABRVUUFVMFUp1VYIKraR6lqoMJqQAUVVHBVQQVUUAUVUEEVNFVOUh1VMJSUUUFFVJBBS2lFBRVQQVUwVQVUUAFVUAUV1FRjTBqVUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRXUaLXVYQQVUUFVMFUFVFAAUVEEFVRUVNMJpVQQUVEEVVFBRVWeUVFFBVTAUUVUEFVUAUV1ExjTJqUUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRzU7njBKKqgigippCKqqMKqqKAKqAqKoCgqqoIKqaAqqoAKqaCKmuqHKjBJqqiCiimpoAqqqACqmgKqqgAqpsIKqbB6lqoMJqQAUVVHBVQQVUUAUVUEEVNFVOUh1VMJSUUUFFVJBBS2lFBRVQQVUwVQVUUAFVUAUV1FRjTBqVUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRXUaLXVYQQVUUFVMFUFVFAAUVEEFVRUVNMJpVQQUVEEVVFBRVWeUVFFBVTAUUVUEFVUAUV1ExjTJqUUEFFRB1VQQVVXlRRUUFVMFVBFVRQBVVBBRbRzU7njBKKqgigippCKqqMKqqKAKqAqKoCgqqoIKqaAqqoAKqaCKmuqHKjBJqqiCiimpoAqqqACqmgeclSxks3M5/ZNz6GHBJrk1rzI5KfF25AAAABJRU5ErkJggg==',
+  };
+
   const SPRITE_SOURCES = {
-    playerIdle: './assets/player_idle.svg',
-    playerWalk1: './assets/player_walk1.svg',
-    playerWalk2: './assets/player_walk2.svg',
+    ...INLINE_PLAYER_SPRITES,
     playerAttack: './assets/player_attack.svg',
     playerHurt: './assets/player_hurt.svg',
     enemyUndead1: './assets/enemy_undead_1.svg',
@@ -24,7 +31,6 @@
     weaponKnifeIcon: './assets/weapon_knife_icon.svg',
     weaponCrossbowIcon: './assets/weapon_crossbow_icon.svg',
     weaponBowIcon: './assets/weapon_bow_icon.svg',
-    weaponStaffIcon: './assets/weapon_staff_icon.svg',
     backgroundTile: './assets/background_tile.svg',
   };
 
@@ -54,7 +60,6 @@
       knife: 'weaponKnifeIcon',
       crossbow: 'weaponCrossbowIcon',
       bow: 'weaponBowIcon',
-      staff: 'weaponStaffIcon',
     },
     background: 'backgroundTile',
   };
@@ -151,21 +156,6 @@
         { title: 'Дальний прицел', description: '+20% радиуса автоатаки', apply: (p) => { p.stats.attackRadius *= 1.2; } },
       ],
     },
-    {
-      id: 'staff',
-      name: 'Жезл искр',
-      description: 'Медленные сферы взрываются и цепляют группу врагов.',
-      icon: './assets/weapon_staff_icon.svg',
-      stats: { damage: 16, attackCooldown: 1, attackRadius: 340, projectileSpeed: 260 },
-      weapon: { kind: 'ranged', count: 1, spread: 0.08, projectile: 'orb', lifespan: 2, splashRadius: 80, pierce: 0 },
-      startingOrbitals: 1,
-      upgrades: [
-        { title: 'Второй заряд', description: '+1 сфера и чуть шире конус', apply: (p) => { p.weapon.count = Math.min(p.weapon.count + 1, 3); p.weapon.spread += 0.06; } },
-        { title: 'Вспышка некера', description: '+25% к радиусу взрыва', apply: (p) => { p.weapon.splashRadius = Math.round((p.weapon.splashRadius || 60) * 1.25); } },
-        { title: 'Ткань заклинателя', description: '-15% к перезарядке и +1 орбитальный дух', apply: (p) => { p.stats.attackCooldown *= 0.85; p.addOrbital({ radius: 90, speed: 2.2, damage: p.stats.damage * 0.6, sprite: 'default' }); } },
-        { title: 'Сжатая мана', description: '+20% к урону сфер', apply: (p) => { p.stats.damage *= 1.2; } },
-      ],
-    },
   ];
   const getWeaponById = (id) => WEAPON_DEFS.find((w) => w.id === id) || WEAPON_DEFS[0];
 
@@ -176,6 +166,10 @@
       this.assets = assets;
       this.canvas = document.createElement('canvas');
       this.ctx = this.canvas.getContext('2d');
+      this.canvas.style.position = 'absolute';
+      this.canvas.style.inset = '0';
+      this.canvas.style.width = '100%';
+      this.canvas.style.height = '100%';
       this.container.appendChild(this.canvas);
       this.camera = { x: 0, y: 0 };
       this.bgNoise = this.createNoisePattern();
@@ -235,11 +229,12 @@
     worldToScreen(pos) {
       return { x: this.canvas.width / 2 + (pos.x - this.camera.x), y: this.canvas.height / 2 + (pos.y - this.camera.y) };
     }
-    drawSprite(image, x, y, { scale = 1, alpha = 1, rotation = 0 } = {}) {
+    drawSprite(image, x, y, { scale = 1, alpha = 1, rotation = 0, flipX = false } = {}) {
       if (!image) return;
       this.ctx.save();
       this.ctx.translate(x, y);
       this.ctx.rotate(rotation);
+      if (flipX) this.ctx.scale(-1, 1);
       this.ctx.globalAlpha = alpha;
       const w = image.width * scale;
       const h = image.height * scale;
@@ -254,7 +249,7 @@
       if (player.hurtTimer > 0) frame = this.assets.images[set.hurt[0]];
       else if (player.attackFlash > 0) frame = this.assets.images[set.attack[0]];
       else if (Math.abs(player.velocity.x) < 2 && Math.abs(player.velocity.y) < 2) frame = this.assets.images[set.idle[0]];
-      this.drawSprite(frame, x, y + bob, { scale: 1.6 });
+      this.drawSprite(frame, x, y + bob, { scale: 1.25, flipX: player.facing < 0 });
       player.orbitals.forEach((orb) => {
         const ox = x + Math.cos(orb.angle) * orb.radius;
         const oy = y + Math.sin(orb.angle) * orb.radius;
@@ -444,6 +439,7 @@
       this.hurtTimer = 0;
       this.attackFlash = 0;
       this.walkCycle = 0;
+      this.facing = 1;
       const baseStats = { speed: 180, damage: 14, attackRadius: 260, attackCooldown: 0.9, mitigation: 0, projectileSpeed: 320 };
       const fallbackWeapon = { kind: 'ranged', count: 1, spread: 0.1, projectile: 'arrow', lifespan: 1.7, pierce: 0 };
       this.weaponId = weaponDef?.id || 'sword';
@@ -470,7 +466,10 @@
       this.position.x += this.velocity.x * dt;
       this.position.y += this.velocity.y * dt;
       const moveMag = Math.hypot(this.velocity.x, this.velocity.y);
-      if (moveMag > 5) this.walkCycle += dt * (moveMag / 70);
+      if (moveMag > 5) {
+        this.walkCycle += dt * (moveMag / 70);
+        if (Math.abs(this.velocity.x) > 1) this.facing = Math.sign(this.velocity.x);
+      }
       this.attackTimer = Math.max(0, this.attackTimer - dt);
       this.hurtTimer = Math.max(0, this.hurtTimer - dt);
       this.attackFlash = Math.max(0, this.attackFlash - dt);
@@ -482,6 +481,7 @@
       this.attackFlash = 0.22;
       const dx = target.position.x - this.position.x;
       const dy = target.position.y - this.position.y;
+      if (Math.abs(dx) > 2) this.facing = Math.sign(dx);
       const baseAngle = Math.atan2(dy, dx);
       const shots = [];
       if (this.weapon.kind === 'melee') {
@@ -581,14 +581,14 @@
 
   class SpawnSystem {
     constructor() { this.reset(); }
-    reset() { this.timer = 2; }
+    reset() { this.timer = 3; }
     update(dt, elapsed, spawnFn, playerPos, activeBoss) {
       this.timer -= dt;
-      const difficulty = 1 + elapsed / 160;
-      const interval = Math.max(0.6, 2 - elapsed / 140);
+      const difficulty = 1 + elapsed / 200;
+      const interval = Math.max(1, 2.4 - elapsed / 160);
       if (this.timer <= 0) {
         this.timer = interval;
-        let count = 1 + Math.floor(elapsed / 50);
+        let count = 1 + Math.floor(elapsed / 70);
         if (elapsed > 300) count += 2;
         for (let i = 0; i < count; i++) {
           const enemy = this.createEnemy(difficulty, playerPos, elapsed, activeBoss);
@@ -733,6 +733,10 @@
       });
     }
     handleBossSpawn() {
+      if (this.activeBoss && !this.activeBoss.isAlive) {
+        this.activeBoss = null;
+        this.nextBossTime = this.elapsed + 300;
+      }
       if (this.activeBoss && this.activeBoss.isAlive) return;
       if (this.elapsed >= this.nextBossTime) {
         const playerPos = this.entities.player.position;
@@ -741,6 +745,7 @@
         const position = { x: playerPos.x + Math.cos(angle) * dist, y: playerPos.y + Math.sin(angle) * dist };
         this.activeBoss = new Enemy('graveLord', position, 1 + this.elapsed / 240);
         this.entities.enemies.push(this.activeBoss);
+        this.nextBossTime = this.elapsed + 300;
         this.updateBossBar();
       }
     }

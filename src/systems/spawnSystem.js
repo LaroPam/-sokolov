@@ -6,16 +6,16 @@ class SpawnSystem {
   }
 
   reset() {
-    this.timer = 2;
+    this.timer = 3;
   }
 
   update(dt, elapsed, spawnFn, playerPos, activeBoss) {
     this.timer -= dt;
-    const difficulty = 1 + elapsed / 160;
-    const interval = Math.max(0.6, 2 - elapsed / 140);
+    const difficulty = 1 + elapsed / 200;
+    const interval = Math.max(1, 2.4 - elapsed / 160);
     if (this.timer <= 0) {
       this.timer = interval;
-      let count = 1 + Math.floor(elapsed / 50);
+      let count = 1 + Math.floor(elapsed / 70);
       if (elapsed > 300) {
         count += 2; // скелеты подступают ордой после пятой минуты
       }
